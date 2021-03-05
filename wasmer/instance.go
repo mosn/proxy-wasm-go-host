@@ -25,9 +25,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/mosn/proxy-wasm-go-host/proxywasm"
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
 	"mosn.io/pkg/utils"
+	"mosn.io/proxy-wasm-go-host/proxywasm"
 )
 
 var (

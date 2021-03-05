@@ -18,8 +18,8 @@
 package wasmer
 
 import (
-	"github.com/mosn/proxy-wasm-go-host/proxywasm"
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
+	"mosn.io/proxy-wasm-go-host/proxywasm"
 )
 
 type Module struct {

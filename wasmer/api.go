@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/mosn/proxy-wasm-go-host/proxywasm"
+	"mosn.io/proxy-wasm-go-host/proxywasm"
 )
 
 func NewWasmerInstanceFromFile(path string) proxywasm.WasmInstance {

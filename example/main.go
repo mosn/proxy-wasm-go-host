@@ -25,9 +25,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/mosn/proxy-wasm-go-host/proxywasm"
-	"github.com/mosn/proxy-wasm-go-host/proxywasm/wasmer"
 	"mosn.io/api"
+	"mosn.io/proxy-wasm-go-host/proxywasm"
+	"mosn.io/proxy-wasm-go-host/proxywasm/wasmer"
 )
 
 var contextIDGenerator int32
