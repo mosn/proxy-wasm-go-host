@@ -27,7 +27,8 @@ import (
 
 	"mosn.io/api"
 	"mosn.io/proxy-wasm-go-host/proxywasm"
-	"mosn.io/proxy-wasm-go-host/proxywasm/wasmer"
+	"mosn.io/proxy-wasm-go-host/types"
+	"mosn.io/proxy-wasm-go-host/wasmer"
 )
 
 var contextIDGenerator int32
@@ -35,7 +36,7 @@ var rootContextID int32
 
 var lock sync.Mutex
 var once sync.Once
-var instance proxywasm.WasmInstance
+var instance types.WasmInstance
 
 // implement proxywasm.ImportsHandler.
 type importHandler struct {
@@ -106,7 +107,7 @@ func main() {
 	_ = http.ListenAndServe("127.0.0.1:2045", nil)
 }
 
-func getWasmInstance() proxywasm.WasmInstance {
+func getWasmInstance() types.WasmInstance {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -115,7 +116,7 @@ func getWasmInstance() proxywasm.WasmInstance {
 		instance = wasmer.NewWasmerInstanceFromFile(filepath.Join(pwd, "data/http.wasm"))
 
 		// register ABI imports into the wasm vm instance
-		proxywasm_0_1_0.RegisterImports(instance)
+		proxywasm.RegisterImports(instance)
 
 		// start the wasm vm instance
 		_ = instance.Start()

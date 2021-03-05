@@ -27,7 +27,7 @@ import (
 
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
 	"mosn.io/pkg/utils"
-	"mosn.io/proxy-wasm-go-host/proxywasm"
+	"mosn.io/proxy-wasm-go-host/types"
 )
 
 var (
@@ -130,7 +130,7 @@ func (w *Instance) Unlock() {
 	w.lock.Unlock()
 }
 
-func (w *Instance) GetModule() proxywasm.WasmModule {
+func (w *Instance) GetModule() types.WasmModule {
 	return w.module
 }
 
@@ -262,7 +262,7 @@ func (w *Instance) Malloc(size int32) (uint64, error) {
 	return uint64(addr.(int32)), nil
 }
 
-func (w *Instance) GetExportsFunc(funcName string) (proxywasm.WasmFunction, error) {
+func (w *Instance) GetExportsFunc(funcName string) (types.WasmFunction, error) {
 	if !w.checkStart() {
 		return nil, ErrInstanceNotStart
 	}

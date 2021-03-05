@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package proxywasm
+package types
 
 // WasmVM represents the wasm vm(engine)
 type WasmVM interface {

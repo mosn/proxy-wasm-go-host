@@ -17,11 +17,13 @@
 
 package proxywasm
 
+import "mosn.io/proxy-wasm-go-host/types"
+
 const ProxyWasmABI_0_1_0 string = "proxy_abi_version_0_1_0"
 
 type ABIContext struct {
 	Imports  ImportsHandler
-	Instance WasmInstance
+	Instance types.WasmInstance
 }
 
 func (a *ABIContext) Name() string {
@@ -36,6 +38,6 @@ func (a *ABIContext) SetImports(imports ImportsHandler) {
 	a.Imports = imports
 }
 
-func (a *ABIContext) SetInstance(instance WasmInstance) {
+func (a *ABIContext) SetInstance(instance types.WasmInstance) {
 	a.Instance = instance
 }
