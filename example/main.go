@@ -50,8 +50,9 @@ func (im *importHandler) GetHttpRequestHeader() api.HeaderMap {
 }
 
 // override.
-func (im *importHandler) Log(level proxywasm.LogLevel, msg string) {
+func (im *importHandler) Log(level proxywasm.LogLevel, msg string) proxywasm.WasmResult {
 	fmt.Println(msg)
+	return proxywasm.WasmResultOk
 }
 
 // serve HTTP req
@@ -92,7 +93,6 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// delete wasm-side context id to prevent memory leak
 	_ = ctx.GetExports().ProxyOnDelete(contextID)
-
 
 	// reply with ok
 	w.WriteHeader(http.StatusOK)

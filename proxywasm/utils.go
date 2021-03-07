@@ -17,7 +17,55 @@
 
 package proxywasm
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+
+	"mosn.io/proxy-wasm-go-host/types"
+)
+
+func copyIntoInstance(instance types.WasmInstance, value string, retPtr int32, retSize int32) WasmResult {
+	addr, err := instance.Malloc(int32(len(value)))
+	if err != nil {
+		return WasmResultInvalidMemoryAccess
+	}
+
+	err = instance.PutMemory(addr, uint64(len(value)), []byte(value))
+	if err != nil {
+		return WasmResultInvalidMemoryAccess
+	}
+
+	err = instance.PutUint32(uint64(retPtr), uint32(addr))
+	if err != nil {
+		return WasmResultInvalidMemoryAccess
+	}
+
+	err = instance.PutUint32(uint64(retSize), uint32(len(value)))
+	if err != nil {
+		return WasmResultInvalidMemoryAccess
+	}
+
+	return WasmResultOk
+}
+
+func getABIContext(instance types.WasmInstance) *ABIContext {
+	if v := instance.GetData(); v != nil {
+		if im, ok := v.(*ABIContext); ok {
+			return im
+		}
+	}
+
+	return nil
+}
+
+func getImportHandler(instance types.WasmInstance) ImportsHandler {
+	if ctx := getABIContext(instance); ctx != nil {
+		if ctx.Imports != nil {
+			return ctx.Imports
+		}
+	}
+
+	return &DefaultImportsHandler{}
+}
 
 // EncodeMap encode map into bytes.
 func EncodeMap(m map[string]string) []byte {

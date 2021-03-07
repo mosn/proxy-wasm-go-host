@@ -15,41 +15,18 @@
  * limitations under the License.
  */
 
-package wasmer
+package proxywasm
 
-import (
-	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
-	"mosn.io/proxy-wasm-go-host/types"
-)
+import "mosn.io/proxy-wasm-go-host/types"
 
-type Module struct {
-	vm          *VM
-	module      *wasmerGo.Module
-	abiNameList []string
-	wasiVersion wasmerGo.WasiVersion
-	rawBytes    []byte
+func ProxyResumeDownstream(instance types.WasmInstance) int32 {
+	ctx := getImportHandler(instance)
+
+	return ctx.ResumeDownstream().Int32()
 }
 
-func NewWasmerModule(vm *VM, module *wasmerGo.Module, wasmBytes []byte) *Module {
-	m := &Module{
-		vm:       vm,
-		module:   module,
-		rawBytes: wasmBytes,
-	}
+func ProxyResumeUpstream(instance types.WasmInstance) int32 {
+	ctx := getImportHandler(instance)
 
-	m.Init()
-
-	return m
-}
-
-func (w *Module) Init() {
-	w.wasiVersion = wasmerGo.GetWasiVersion(w.module)
-}
-
-func (w *Module) NewInstance() types.WasmInstance {
-	return NewWasmerInstance(w.vm, w)
-}
-
-func (w *Module) GetABINameList() []string {
-	return nil
+	return ctx.ResumeUpstream().Int32()
 }

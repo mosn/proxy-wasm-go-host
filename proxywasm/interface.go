@@ -28,6 +28,7 @@ type Exports interface {
 	ProxyOnDone(contextId int32) (int32, error)
 	ProxyOnLog(contextId int32) error
 	ProxyOnDelete(contextId int32) error
+	ProxyOnMemoryAllocate(size int32) (int32, error)
 
 	ProxyOnVmStart(rootContextId int32, vmConfigurationSize int32) (int32, error)
 	ProxyOnConfigure(rootContextId int32, pluginConfigurationSize int32) (int32, error)
@@ -35,8 +36,10 @@ type Exports interface {
 	ProxyOnTick(rootContextId int32) error
 
 	ProxyOnNewConnection(contextId int32) (Action, error)
+
 	ProxyOnDownstreamData(contextId int32, dataLength int32, endOfStream int32) (Action, error)
 	ProxyOnDownstreamConnectionClose(contextId int32, closeType int32) error
+
 	ProxyOnUpstreamData(contextId int32, dataLength int32, endOfStream int32) (Action, error)
 	ProxyOnUpstreamConnectionClose(contextId int32, closeType int32) error
 
@@ -53,16 +56,44 @@ type Exports interface {
 	ProxyOnHttpCallResponse(contextId int32, token int32, headers int32, bodySize int32, trailers int32) error
 
 	ProxyOnQueueReady(rootContextId int32, token int32) error
+
+	ProxyOnGrpcCallResponseHeaderMetadata(contextID int32, calloutID int32, nElements int32) error
+	ProxyOnGrpcCallResponseMessage(contextID int32, calloutID int32, msgSize int32) error
+	ProxyOnGrpcCallResponseTrailerMetadata(contextID int32, calloutID int32, nElements int32) error
+	ProxyOnGrpcCallClose(contextID int32, calloutID int32, statusCode int32) error
 }
 
 type ImportsHandler interface {
+	// utils
+	Log(level LogLevel, msg string) WasmResult
 	GetRootContextID() int32
+	SetEffectiveContextID(contextID int32) WasmResult
+	SetTickPeriodMilliseconds(tickPeriodMilliseconds int32) WasmResult
+	GetCurrentTimeNanoseconds() (int32, WasmResult)
+	Done() WasmResult
 
+	// config
 	GetVmConfig() buffer.IoBuffer
 	GetPluginConfig() buffer.IoBuffer
 
-	Log(level LogLevel, msg string)
+	// metric
+	DefineMetric(metricType MetricType, name string) (int32, WasmResult)
+	IncrementMetric(metricID int32, offset int64) WasmResult
+	RecordMetric(metricID int32, value int64) WasmResult
+	GetMetric(metricID int32) (int64, WasmResult)
+	RemoveMetric(metricID int32) WasmResult
 
+	// property
+	GetProperty(key string) (string, WasmResult)
+	SetProperty(key string, value string) WasmResult
+
+	// l4
+	GetDownStreamData() buffer.IoBuffer
+	GetUpstreamData() buffer.IoBuffer
+	ResumeDownstream() WasmResult
+	ResumeUpstream() WasmResult
+
+	// http
 	GetHttpRequestHeader() api.HeaderMap
 	GetHttpRequestBody() buffer.IoBuffer
 	GetHttpRequestTrailer() api.HeaderMap
@@ -70,26 +101,38 @@ type ImportsHandler interface {
 	GetHttpResponseHeader() api.HeaderMap
 	GetHttpResponseBody() buffer.IoBuffer
 	GetHttpResponseTrailer() api.HeaderMap
+
+	HttpCall(url string, headers api.HeaderMap, body buffer.IoBuffer, trailer api.HeaderMap, timeoutMilliseconds int32) (int32, WasmResult)
+	GetHttpCallResponseHeaders() api.HeaderMap
+	GetHttpCallResponseBody() buffer.IoBuffer
+	GetHttpCallResponseTrailer() api.HeaderMap
+
+	ResumeHttpRequest() WasmResult
+	ResumeHttpResponse() WasmResult
+	SendHttpResp(respCode int32, respCodeDetail buffer.IoBuffer, respBody buffer.IoBuffer, additionalHeaderMap api.HeaderMap, grpcCode int32) WasmResult
+
+	// grpc
+	OpenGrpcStream(grpcService string, serviceName string, method string) (int32, WasmResult)
+	SendGrpcCallMsg(token int32, data buffer.IoBuffer, endOfStream int32) WasmResult
+	CancelGrpcCall(token int32) WasmResult
+	CloseGrpcCall(token int32) WasmResult
+
+	GrpcCall(grpcService string, serviceName string, method string, data buffer.IoBuffer, timeoutMilliseconds int32) (int32, WasmResult)
+	GetGrpcReceiveInitialMetaData() api.HeaderMap
+	GetGrpcReceiveBuffer() buffer.IoBuffer
+	GetGrpcReceiveTrailerMetaData() api.HeaderMap
+
+	// foreign
+	CallForeignFunction(funcName string, param string) (string, WasmResult)
+	GetFuncCallData() buffer.IoBuffer
+
+	// shared
+	GetSharedData(key string) (string, uint32, WasmResult)
+	SetSharedData(key string, value string, cas uint32) WasmResult
+
+	RegisterSharedQueue(queueName string) (uint32, WasmResult)
+	RemoveSharedQueue(queueID uint32) WasmResult
+	ResolveSharedQueue(queueName string) (uint32, WasmResult)
+	EnqueueSharedQueue(queueID uint32, data string) WasmResult
+	DequeueSharedQueue(queueID uint32) (string, WasmResult)
 }
-
-type DefaultImportsHandler struct{}
-
-func (d *DefaultImportsHandler) GetRootContextID() int32 { return 0 }
-
-func (d *DefaultImportsHandler) GetVmConfig() buffer.IoBuffer { return nil }
-
-func (d *DefaultImportsHandler) GetPluginConfig() buffer.IoBuffer { return nil }
-
-func (d *DefaultImportsHandler) Log(level LogLevel, msg string) {}
-
-func (d *DefaultImportsHandler) GetHttpRequestHeader() api.HeaderMap { return nil }
-
-func (d *DefaultImportsHandler) GetHttpRequestBody() buffer.IoBuffer { return nil }
-
-func (d *DefaultImportsHandler) GetHttpRequestTrailer() api.HeaderMap { return nil }
-
-func (d *DefaultImportsHandler) GetHttpResponseHeader() api.HeaderMap { return nil }
-
-func (d *DefaultImportsHandler) GetHttpResponseBody() buffer.IoBuffer { return nil }
-
-func (d *DefaultImportsHandler) GetHttpResponseTrailer() api.HeaderMap { return nil }

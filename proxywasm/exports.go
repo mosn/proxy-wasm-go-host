@@ -17,10 +17,6 @@
 
 package proxywasm
 
-func (a *ABIContext) waitAsyncHttpCallout() error {
-	return nil
-}
-
 func (a *ABIContext) ProxyOnContextCreate(contextId int32, parentContextId int32) error {
 	ff, err := a.Instance.GetExportsFunc("proxy_on_context_create")
 	if err != nil {
@@ -30,10 +26,6 @@ func (a *ABIContext) ProxyOnContextCreate(contextId int32, parentContextId int32
 	_, err = ff.Call(contextId, parentContextId)
 	if err != nil {
 		a.Instance.HandleError(err)
-		return err
-	}
-
-	if err = a.waitAsyncHttpCallout(); err != nil {
 		return err
 	}
 
@@ -49,10 +41,6 @@ func (a *ABIContext) ProxyOnDone(contextId int32) (int32, error) {
 	res, err := ff.Call(contextId)
 	if err != nil {
 		a.Instance.HandleError(err)
-		return 0, err
-	}
-
-	if err = a.waitAsyncHttpCallout(); err != nil {
 		return 0, err
 	}
 
@@ -86,10 +74,6 @@ func (a *ABIContext) ProxyOnVmStart(rootContextId int32, vmConfigurationSize int
 		return 0, err
 	}
 
-	if err = a.waitAsyncHttpCallout(); err != nil {
-		return 0, err
-	}
-
 	return res.(int32), nil
 }
 
@@ -102,10 +86,6 @@ func (a *ABIContext) ProxyOnDelete(contextId int32) error {
 	_, err = ff.Call(contextId)
 	if err != nil {
 		a.Instance.HandleError(err)
-		return err
-	}
-
-	if err = a.waitAsyncHttpCallout(); err != nil {
 		return err
 	}
 
@@ -124,10 +104,6 @@ func (a *ABIContext) ProxyOnConfigure(rootContextId int32, configurationSize int
 		return 0, err
 	}
 
-	if err = a.waitAsyncHttpCallout(); err != nil {
-		return 0, err
-	}
-
 	return res.(int32), nil
 }
 
@@ -140,10 +116,6 @@ func (a *ABIContext) ProxyOnTick(rootContextId int32) error {
 	_, err = ff.Call(rootContextId)
 	if err != nil {
 		a.Instance.HandleError(err)
-		return err
-	}
-
-	if err = a.waitAsyncHttpCallout(); err != nil {
 		return err
 	}
 
@@ -162,10 +134,6 @@ func (a *ABIContext) ProxyOnNewConnection(contextId int32) (Action, error) {
 		return ActionPause, err
 	}
 
-	if err = a.waitAsyncHttpCallout(); err != nil {
-		return ActionPause, err
-	}
-
 	return Action(res.(int32)), nil
 }
 
@@ -178,10 +146,6 @@ func (a *ABIContext) ProxyOnDownstreamData(contextId int32, dataLength int32, en
 	res, err := ff.Call(contextId, dataLength, endOfStream)
 	if err != nil {
 		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	if err = a.waitAsyncHttpCallout(); err != nil {
 		return ActionPause, err
 	}
 
@@ -200,10 +164,6 @@ func (a *ABIContext) ProxyOnDownstreamConnectionClose(contextId int32, closeType
 		return err
 	}
 
-	if err = a.waitAsyncHttpCallout(); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -216,10 +176,6 @@ func (a *ABIContext) ProxyOnUpstreamData(contextId int32, dataLength int32, endO
 	res, err := ff.Call(contextId, dataLength, endOfStream)
 	if err != nil {
 		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	if err = a.waitAsyncHttpCallout(); err != nil {
 		return ActionPause, err
 	}
 
@@ -238,10 +194,6 @@ func (a *ABIContext) ProxyOnUpstreamConnectionClose(contextId int32, closeType i
 		return err
 	}
 
-	if err = a.waitAsyncHttpCallout(); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -254,10 +206,6 @@ func (a *ABIContext) ProxyOnRequestHeaders(contextID int32, numHeaders int32, en
 	res, err := ff.Call(contextID, numHeaders, endOfStream)
 	if err != nil {
 		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	if err = a.waitAsyncHttpCallout(); err != nil {
 		return ActionPause, err
 	}
 
@@ -276,10 +224,6 @@ func (a *ABIContext) ProxyOnRequestBody(contextId int32, bodyBufferLength int32,
 		return ActionPause, err
 	}
 
-	if err = a.waitAsyncHttpCallout(); err != nil {
-		return ActionPause, err
-	}
-
 	return Action(res.(int32)), nil
 }
 
@@ -292,10 +236,6 @@ func (a *ABIContext) ProxyOnRequestTrailers(contextId int32, trailers int32) (Ac
 	res, err := ff.Call(contextId, trailers)
 	if err != nil {
 		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	if err = a.waitAsyncHttpCallout(); err != nil {
 		return ActionPause, err
 	}
 
@@ -314,10 +254,6 @@ func (a *ABIContext) ProxyOnRequestMetadata(contextId int32, nElements int32) (A
 		return ActionPause, err
 	}
 
-	if err = a.waitAsyncHttpCallout(); err != nil {
-		return ActionPause, err
-	}
-
 	return Action(res.(int32)), nil
 }
 
@@ -330,10 +266,6 @@ func (a *ABIContext) ProxyOnResponseHeaders(contextId int32, headers int32, endO
 	res, err := ff.Call(contextId, headers, endOfStream)
 	if err != nil {
 		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	if err = a.waitAsyncHttpCallout(); err != nil {
 		return ActionPause, err
 	}
 
@@ -352,10 +284,6 @@ func (a *ABIContext) ProxyOnResponseBody(contextId int32, bodyBufferLength int32
 		return ActionPause, err
 	}
 
-	if err = a.waitAsyncHttpCallout(); err != nil {
-		return ActionPause, err
-	}
-
 	return Action(res.(int32)), nil
 }
 
@@ -371,10 +299,6 @@ func (a *ABIContext) ProxyOnResponseTrailers(contextId int32, trailers int32) (A
 		return ActionPause, err
 	}
 
-	if err = a.waitAsyncHttpCallout(); err != nil {
-		return ActionPause, err
-	}
-
 	return Action(res.(int32)), nil
 }
 
@@ -387,10 +311,6 @@ func (a *ABIContext) ProxyOnResponseMetadata(contextId int32, nElements int32) (
 	res, err := ff.Call(contextId, nElements)
 	if err != nil {
 		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	if err = a.waitAsyncHttpCallout(); err != nil {
 		return ActionPause, err
 	}
 
@@ -419,6 +339,81 @@ func (a *ABIContext) ProxyOnQueueReady(rootContextId int32, token int32) error {
 	}
 
 	_, err = ff.Call(rootContextId, token)
+	if err != nil {
+		a.Instance.HandleError(err)
+		return err
+	}
+
+	return nil
+}
+
+func (a *ABIContext) ProxyOnMemoryAllocate(size int32) (int32, error) {
+	ff, err := a.Instance.GetExportsFunc("proxy_on_memory_allocate")
+	if err != nil {
+		return 0, err
+	}
+
+	res, err := ff.Call(size)
+	if err != nil {
+		a.Instance.HandleError(err)
+		return 0, err
+	}
+
+	return res.(int32), nil
+}
+
+func (a *ABIContext) ProxyOnGrpcCallResponseHeaderMetadata(contextID int32, calloutID int32, nElements int32) error {
+	ff, err := a.Instance.GetExportsFunc("proxy_on_grpc_call_response_header_metadata")
+	if err != nil {
+		return err
+	}
+
+	_, err = ff.Call(contextID, calloutID, nElements)
+	if err != nil {
+		a.Instance.HandleError(err)
+		return err
+	}
+
+	return nil
+}
+
+func (a *ABIContext) ProxyOnGrpcCallResponseMessage(contextID int32, calloutID int32, msgSize int32) error {
+	ff, err := a.Instance.GetExportsFunc("proxy_on_grpc_call_response_message")
+	if err != nil {
+		return err
+	}
+
+	_, err = ff.Call(contextID, calloutID, msgSize)
+	if err != nil {
+		a.Instance.HandleError(err)
+		return err
+	}
+
+	return nil
+}
+
+func (a *ABIContext) ProxyOnGrpcCallResponseTrailerMetadata(contextID int32, calloutID int32, nElements int32) error {
+	ff, err := a.Instance.GetExportsFunc("proxy_on_grpc_call_response_trailer_metadata")
+	if err != nil {
+		return err
+	}
+
+	_, err = ff.Call(contextID, calloutID, nElements)
+	if err != nil {
+		a.Instance.HandleError(err)
+		return err
+	}
+
+	return nil
+}
+
+func (a *ABIContext) ProxyOnGrpcCallClose(contextID int32, calloutID int32, statusCode int32) error {
+	ff, err := a.Instance.GetExportsFunc("proxy_on_grpc_call_close")
+	if err != nil {
+		return err
+	}
+
+	_, err = ff.Call(contextID, calloutID, statusCode)
 	if err != nil {
 		a.Instance.HandleError(err)
 		return err
