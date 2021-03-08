@@ -115,7 +115,7 @@ func ProxyResolveSharedQueue(instance types.WasmInstance, queueNamePtr int32, qu
 func ProxyDequeueSharedQueue(instance types.WasmInstance, token int32, dataPtr int32, dataSize int32) int32 {
 	ctx := getImportHandler(instance)
 
-	value, res := ctx.DequeueSharedQueue(token)
+	value, res := ctx.DequeueSharedQueue(uint32(token))
 	if res != WasmResultOk {
 		return res.Int32()
 	}
@@ -131,7 +131,7 @@ func ProxyEnqueueSharedQueue(instance types.WasmInstance, token int32, dataPtr i
 
 	ctx := getImportHandler(instance)
 
-	return ctx.EnqueueSharedQueue(token, string(value)).Int32()
+	return ctx.EnqueueSharedQueue(uint32(token), string(value)).Int32()
 }
 
 func ProxyGetSharedData(instance types.WasmInstance, keyPtr int32, keySize int32, valuePtr int32, valueSizePtr int32, casPtr int32) int32 {

@@ -135,7 +135,7 @@ func (d *DefaultImportsHandler) GetFuncCallData() buffer.IoBuffer { return nil }
 // property
 
 func (d *DefaultImportsHandler) GetProperty(key string) (string, WasmResult) {
-	return "", WasmResultUnimplemented
+	return "", WasmResultOk
 }
 
 func (d *DefaultImportsHandler) SetProperty(key string, value string) WasmResult {
