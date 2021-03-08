@@ -23,8 +23,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"mosn.io/api"
-	"mosn.io/pkg/buffer"
+	"mosn.io/proxy-wasm-go-host/common"
 )
 
 type DefaultImportsHandler struct{}
@@ -32,9 +31,9 @@ type DefaultImportsHandler struct{}
 // utils
 func (d *DefaultImportsHandler) GetRootContextID() int32 { return 0 }
 
-func (d *DefaultImportsHandler) GetVmConfig() buffer.IoBuffer { return nil }
+func (d *DefaultImportsHandler) GetVmConfig() common.IoBuffer { return nil }
 
-func (d *DefaultImportsHandler) GetPluginConfig() buffer.IoBuffer { return nil }
+func (d *DefaultImportsHandler) GetPluginConfig() common.IoBuffer { return nil }
 
 func (d *DefaultImportsHandler) Log(level LogLevel, msg string) WasmResult {
 	fmt.Println(msg)
@@ -58,9 +57,9 @@ func (d *DefaultImportsHandler) Done() WasmResult { return WasmResultUnimplement
 
 // l4
 
-func (d *DefaultImportsHandler) GetDownStreamData() buffer.IoBuffer { return nil }
+func (d *DefaultImportsHandler) GetDownStreamData() common.IoBuffer { return nil }
 
-func (d *DefaultImportsHandler) GetUpstreamData() buffer.IoBuffer { return nil }
+func (d *DefaultImportsHandler) GetUpstreamData() common.IoBuffer { return nil }
 
 func (d *DefaultImportsHandler) ResumeDownstream() WasmResult { return WasmResultUnimplemented }
 
@@ -68,25 +67,25 @@ func (d *DefaultImportsHandler) ResumeUpstream() WasmResult { return WasmResultU
 
 // http
 
-func (d *DefaultImportsHandler) GetHttpRequestHeader() api.HeaderMap { return nil }
+func (d *DefaultImportsHandler) GetHttpRequestHeader() common.HeaderMap { return nil }
 
-func (d *DefaultImportsHandler) GetHttpRequestBody() buffer.IoBuffer { return nil }
+func (d *DefaultImportsHandler) GetHttpRequestBody() common.IoBuffer { return nil }
 
-func (d *DefaultImportsHandler) GetHttpRequestTrailer() api.HeaderMap { return nil }
+func (d *DefaultImportsHandler) GetHttpRequestTrailer() common.HeaderMap { return nil }
 
-func (d *DefaultImportsHandler) GetHttpResponseHeader() api.HeaderMap { return nil }
+func (d *DefaultImportsHandler) GetHttpResponseHeader() common.HeaderMap { return nil }
 
-func (d *DefaultImportsHandler) GetHttpResponseBody() buffer.IoBuffer { return nil }
+func (d *DefaultImportsHandler) GetHttpResponseBody() common.IoBuffer { return nil }
 
-func (d *DefaultImportsHandler) GetHttpResponseTrailer() api.HeaderMap { return nil }
+func (d *DefaultImportsHandler) GetHttpResponseTrailer() common.HeaderMap { return nil }
 
-func (d *DefaultImportsHandler) GetHttpCallResponseHeaders() api.HeaderMap { return nil }
+func (d *DefaultImportsHandler) GetHttpCallResponseHeaders() common.HeaderMap { return nil }
 
-func (d *DefaultImportsHandler) GetHttpCallResponseBody() buffer.IoBuffer { return nil }
+func (d *DefaultImportsHandler) GetHttpCallResponseBody() common.IoBuffer { return nil }
 
-func (d *DefaultImportsHandler) GetHttpCallResponseTrailer() api.HeaderMap { return nil }
+func (d *DefaultImportsHandler) GetHttpCallResponseTrailer() common.HeaderMap { return nil }
 
-func (d *DefaultImportsHandler) HttpCall(url string, headers api.HeaderMap, body buffer.IoBuffer, trailer api.HeaderMap, timeoutMilliseconds int32) (int32, WasmResult) {
+func (d *DefaultImportsHandler) HttpCall(url string, headers common.HeaderMap, body common.IoBuffer, trailer common.HeaderMap, timeoutMilliseconds int32) (int32, WasmResult) {
 	return 0, WasmResultUnimplemented
 }
 
@@ -94,7 +93,7 @@ func (d *DefaultImportsHandler) ResumeHttpRequest() WasmResult { return WasmResu
 
 func (d *DefaultImportsHandler) ResumeHttpResponse() WasmResult { return WasmResultUnimplemented }
 
-func (d *DefaultImportsHandler) SendHttpResp(respCode int32, respCodeDetail buffer.IoBuffer, respBody buffer.IoBuffer, additionalHeaderMap api.HeaderMap, grpcCode int32) WasmResult {
+func (d *DefaultImportsHandler) SendHttpResp(respCode int32, respCodeDetail common.IoBuffer, respBody common.IoBuffer, additionalHeaderMap common.HeaderMap, grpcCode int32) WasmResult {
 	return WasmResultUnimplemented
 }
 
@@ -104,7 +103,7 @@ func (d *DefaultImportsHandler) OpenGrpcStream(grpcService string, serviceName s
 	return 0, WasmResultUnimplemented
 }
 
-func (d *DefaultImportsHandler) SendGrpcCallMsg(token int32, data buffer.IoBuffer, endOfStream int32) WasmResult {
+func (d *DefaultImportsHandler) SendGrpcCallMsg(token int32, data common.IoBuffer, endOfStream int32) WasmResult {
 	return WasmResultUnimplemented
 }
 
@@ -114,15 +113,15 @@ func (d *DefaultImportsHandler) CancelGrpcCall(token int32) WasmResult {
 
 func (d *DefaultImportsHandler) CloseGrpcCall(token int32) WasmResult { return WasmResultUnimplemented }
 
-func (d *DefaultImportsHandler) GrpcCall(grpcService string, serviceName string, method string, data buffer.IoBuffer, timeoutMilliseconds int32) (int32, WasmResult) {
+func (d *DefaultImportsHandler) GrpcCall(grpcService string, serviceName string, method string, data common.IoBuffer, timeoutMilliseconds int32) (int32, WasmResult) {
 	return 0, WasmResultUnimplemented
 }
 
-func (d *DefaultImportsHandler) GetGrpcReceiveInitialMetaData() api.HeaderMap { return nil }
+func (d *DefaultImportsHandler) GetGrpcReceiveInitialMetaData() common.HeaderMap { return nil }
 
-func (d *DefaultImportsHandler) GetGrpcReceiveBuffer() buffer.IoBuffer { return nil }
+func (d *DefaultImportsHandler) GetGrpcReceiveBuffer() common.IoBuffer { return nil }
 
-func (d *DefaultImportsHandler) GetGrpcReceiveTrailerMetaData() api.HeaderMap { return nil }
+func (d *DefaultImportsHandler) GetGrpcReceiveTrailerMetaData() common.HeaderMap { return nil }
 
 // foreign
 
@@ -130,7 +129,7 @@ func (d *DefaultImportsHandler) CallForeignFunction(funcName string, param strin
 	return "", WasmResultUnimplemented
 }
 
-func (d *DefaultImportsHandler) GetFuncCallData() buffer.IoBuffer { return nil }
+func (d *DefaultImportsHandler) GetFuncCallData() common.IoBuffer { return nil }
 
 // property
 

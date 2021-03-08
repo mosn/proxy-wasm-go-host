@@ -19,7 +19,7 @@ package wasmer
 
 import (
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
-	"mosn.io/proxy-wasm-go-host/types"
+	"mosn.io/proxy-wasm-go-host/common"
 )
 
 type Module struct {
@@ -46,7 +46,7 @@ func (w *Module) Init() {
 	w.wasiVersion = wasmerGo.GetWasiVersion(w.module)
 }
 
-func (w *Module) NewInstance() types.WasmInstance {
+func (w *Module) NewInstance() common.WasmInstance {
 	return NewWasmerInstance(w.vm, w)
 }
 

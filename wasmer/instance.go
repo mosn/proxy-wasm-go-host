@@ -26,8 +26,7 @@ import (
 	"sync/atomic"
 
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
-	"mosn.io/pkg/utils"
-	"mosn.io/proxy-wasm-go-host/types"
+	"mosn.io/proxy-wasm-go-host/common"
 )
 
 var (
@@ -130,7 +129,7 @@ func (w *Instance) Unlock() {
 	w.lock.Unlock()
 }
 
-func (w *Instance) GetModule() types.WasmModule {
+func (w *Instance) GetModule() common.WasmModule {
 	return w.module
 }
 
@@ -159,15 +158,14 @@ func (w *Instance) Start() error {
 }
 
 func (w *Instance) Stop() {
-	utils.GoWithRecover(func() {
+	go func() {
 		w.lock.Lock()
 		for w.refCount > 0 {
 			w.stopCond.Wait()
 		}
 		_ = atomic.CompareAndSwapUint32(&w.started, 1, 0)
 		w.lock.Unlock()
-
-	}, nil)
+	}()
 }
 
 // return true is Instance is started, false if not started.
@@ -262,7 +260,7 @@ func (w *Instance) Malloc(size int32) (uint64, error) {
 	return uint64(addr.(int32)), nil
 }
 
-func (w *Instance) GetExportsFunc(funcName string) (types.WasmFunction, error) {
+func (w *Instance) GetExportsFunc(funcName string) (common.WasmFunction, error) {
 	if !w.checkStart() {
 		return nil, ErrInstanceNotStart
 	}

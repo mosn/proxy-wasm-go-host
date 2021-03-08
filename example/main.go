@@ -25,9 +25,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"mosn.io/api"
+	"mosn.io/proxy-wasm-go-host/common"
 	"mosn.io/proxy-wasm-go-host/proxywasm"
-	"mosn.io/proxy-wasm-go-host/types"
 	"mosn.io/proxy-wasm-go-host/wasmer"
 )
 
@@ -36,16 +35,16 @@ var rootContextID int32
 
 var lock sync.Mutex
 var once sync.Once
-var instance types.WasmInstance
+var instance common.WasmInstance
 
 // implement proxywasm.ImportsHandler.
 type importHandler struct {
-	reqHeader api.HeaderMap
+	reqHeader common.HeaderMap
 	proxywasm.DefaultImportsHandler
 }
 
 // override.
-func (im *importHandler) GetHttpRequestHeader() api.HeaderMap {
+func (im *importHandler) GetHttpRequestHeader() common.HeaderMap {
 	return im.reqHeader
 }
 
@@ -107,7 +106,7 @@ func main() {
 	_ = http.ListenAndServe("127.0.0.1:2045", nil)
 }
 
-func getWasmInstance() types.WasmInstance {
+func getWasmInstance() common.WasmInstance {
 	lock.Lock()
 	defer lock.Unlock()
 

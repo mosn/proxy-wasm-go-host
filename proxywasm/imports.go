@@ -18,10 +18,10 @@
 package proxywasm
 
 import (
-	"mosn.io/proxy-wasm-go-host/types"
+	"mosn.io/proxy-wasm-go-host/common"
 )
 
-func RegisterImports(instance types.WasmInstance) {
+func RegisterImports(instance common.WasmInstance) {
 	_ = instance.RegisterFunc("env", "proxy_log", ProxyLog)
 
 	_ = instance.RegisterFunc("env", "proxy_set_effective_context", ProxySetEffectiveContext)
@@ -81,7 +81,7 @@ func RegisterImports(instance types.WasmInstance) {
 	_ = instance.RegisterFunc("env", "proxy_call_foreign_function", ProxyCallForeignFunction)
 }
 
-func ProxyLog(instance types.WasmInstance, level int32, logDataPtr int32, logDataSize int32) int32 {
+func ProxyLog(instance common.WasmInstance, level int32, logDataPtr int32, logDataSize int32) int32 {
 	logContent, err := instance.GetMemory(uint64(logDataPtr), uint64(logDataSize))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()
@@ -92,17 +92,17 @@ func ProxyLog(instance types.WasmInstance, level int32, logDataPtr int32, logDat
 	return callback.Log(LogLevel(level), string(logContent)).Int32()
 }
 
-func ProxySetEffectiveContext(instance types.WasmInstance, contextID int32) int32 {
+func ProxySetEffectiveContext(instance common.WasmInstance, contextID int32) int32 {
 	ctx := getImportHandler(instance)
 	return ctx.SetEffectiveContextID(contextID).Int32()
 }
 
-func ProxySetTickPeriodMilliseconds(instance types.WasmInstance, tickPeriodMilliseconds int32) int32 {
+func ProxySetTickPeriodMilliseconds(instance common.WasmInstance, tickPeriodMilliseconds int32) int32 {
 	ctx := getImportHandler(instance)
 	return ctx.SetTickPeriodMilliseconds(tickPeriodMilliseconds).Int32()
 }
 
-func ProxyGetCurrentTimeNanoseconds(instance types.WasmInstance, resultUint64Ptr int32) int32 {
+func ProxyGetCurrentTimeNanoseconds(instance common.WasmInstance, resultUint64Ptr int32) int32 {
 	ctx := getImportHandler(instance)
 
 	nano, res := ctx.GetCurrentTimeNanoseconds()
@@ -118,12 +118,12 @@ func ProxyGetCurrentTimeNanoseconds(instance types.WasmInstance, resultUint64Ptr
 	return WasmResultOk.Int32()
 }
 
-func ProxyDone(instance types.WasmInstance) int32 {
+func ProxyDone(instance common.WasmInstance) int32 {
 	ctx := getImportHandler(instance)
 	return ctx.Done().Int32()
 }
 
-func ProxyCallForeignFunction(instance types.WasmInstance, funcNamePtr int32, funcNameSize int32,
+func ProxyCallForeignFunction(instance common.WasmInstance, funcNamePtr int32, funcNameSize int32,
 	paramPtr int32, paramSize int32, returnData int32, returnSize int32) int32 {
 
 	funcName, err := instance.GetMemory(uint64(funcNamePtr), uint64(funcNameSize))

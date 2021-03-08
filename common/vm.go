@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package types
+package common
 
 // WasmVM represents the wasm vm(engine)
 type WasmVM interface {
@@ -41,6 +41,7 @@ type WasmModule interface {
 	GetABINameList() []string
 }
 
+// WasmInstance represents the wasm instance
 type WasmInstance interface {
 	// Start starts the wasm instance
 	Start() error

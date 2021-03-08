@@ -17,15 +17,15 @@
 
 package proxywasm
 
-import "mosn.io/proxy-wasm-go-host/types"
+import "mosn.io/proxy-wasm-go-host/common"
 
-func ProxyResumeDownstream(instance types.WasmInstance) int32 {
+func ProxyResumeDownstream(instance common.WasmInstance) int32 {
 	ctx := getImportHandler(instance)
 
 	return ctx.ResumeDownstream().Int32()
 }
 
-func ProxyResumeUpstream(instance types.WasmInstance) int32 {
+func ProxyResumeUpstream(instance common.WasmInstance) int32 {
 	ctx := getImportHandler(instance)
 
 	return ctx.ResumeUpstream().Int32()

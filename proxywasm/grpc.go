@@ -18,11 +18,10 @@
 package proxywasm
 
 import (
-	"mosn.io/pkg/buffer"
-	"mosn.io/proxy-wasm-go-host/types"
+	"mosn.io/proxy-wasm-go-host/common"
 )
 
-func ProxyOpenGrpcStream(instance types.WasmInstance, grpcServiceData int32, grpcServiceSize int32,
+func ProxyOpenGrpcStream(instance common.WasmInstance, grpcServiceData int32, grpcServiceSize int32,
 	serviceNameData int32, serviceNameSize int32, methodData int32, methodSize int32, returnCalloutID int32) int32 {
 
 	grpcService, err := instance.GetMemory(uint64(grpcServiceData), uint64(grpcServiceSize))
@@ -55,7 +54,7 @@ func ProxyOpenGrpcStream(instance types.WasmInstance, grpcServiceData int32, grp
 	return WasmResultOk.Int32()
 }
 
-func ProxySendGrpcCallMessage(instance types.WasmInstance, calloutID int32, data int32, size int32, endOfStream int32) int32 {
+func ProxySendGrpcCallMessage(instance common.WasmInstance, calloutID int32, data int32, size int32, endOfStream int32) int32 {
 	msg, err := instance.GetMemory(uint64(data), uint64(size))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()
@@ -63,20 +62,20 @@ func ProxySendGrpcCallMessage(instance types.WasmInstance, calloutID int32, data
 
 	ctx := getImportHandler(instance)
 
-	return ctx.SendGrpcCallMsg(calloutID, buffer.NewIoBufferBytes(msg), endOfStream).Int32()
+	return ctx.SendGrpcCallMsg(calloutID, common.NewIoBufferBytes(msg), endOfStream).Int32()
 }
 
-func ProxyCancelGrpcCall(instance types.WasmInstance, calloutID int32) int32 {
+func ProxyCancelGrpcCall(instance common.WasmInstance, calloutID int32) int32 {
 	ctx := getImportHandler(instance)
 	return ctx.CancelGrpcCall(calloutID).Int32()
 }
 
-func ProxyCloseGrpcCall(instance types.WasmInstance, calloutID int32) int32 {
+func ProxyCloseGrpcCall(instance common.WasmInstance, calloutID int32) int32 {
 	ctx := getImportHandler(instance)
 	return ctx.CloseGrpcCall(calloutID).Int32()
 }
 
-func ProxyGrpcCall(instance types.WasmInstance, grpcServiceData int32, grpcServiceSize int32,
+func ProxyGrpcCall(instance common.WasmInstance, grpcServiceData int32, grpcServiceSize int32,
 	serviceNameData int32, serviceNameSize int32,
 	methodData int32, methodSize int32,
 	grpcMessageData int32, grpcMessageSize int32,
@@ -105,7 +104,7 @@ func ProxyGrpcCall(instance types.WasmInstance, grpcServiceData int32, grpcServi
 	ctx := getImportHandler(instance)
 
 	calloutID, res := ctx.GrpcCall(string(grpcService), string(serviceName), string(method),
-		buffer.NewIoBufferBytes(msg), timeoutMilliseconds)
+		common.NewIoBufferBytes(msg), timeoutMilliseconds)
 	if res != WasmResultOk {
 		return res.Int32()
 	}

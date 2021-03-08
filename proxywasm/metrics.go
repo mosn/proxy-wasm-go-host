@@ -17,9 +17,11 @@
 
 package proxywasm
 
-import "mosn.io/proxy-wasm-go-host/types"
+import (
+	"mosn.io/proxy-wasm-go-host/common"
+)
 
-func ProxyDefineMetric(instance types.WasmInstance, metricType int32, namePtr int32, nameSize int32, returnMetricId int32) int32 {
+func ProxyDefineMetric(instance common.WasmInstance, metricType int32, namePtr int32, nameSize int32, returnMetricId int32) int32 {
 	ctx := getImportHandler(instance)
 
 	if MetricType(metricType) > MetricTypeMax {
@@ -47,7 +49,7 @@ func ProxyDefineMetric(instance types.WasmInstance, metricType int32, namePtr in
 	return WasmResultOk.Int32()
 }
 
-func ProxyIncrementMetric(instance types.WasmInstance, metricId int32, offset int64) int32 {
+func ProxyIncrementMetric(instance common.WasmInstance, metricId int32, offset int64) int32 {
 	ctx := getImportHandler(instance)
 
 	res := ctx.IncrementMetric(metricId, offset)
@@ -55,7 +57,7 @@ func ProxyIncrementMetric(instance types.WasmInstance, metricId int32, offset in
 	return res.Int32()
 }
 
-func ProxyRecordMetric(instance types.WasmInstance, metricId int32, value int64) int32 {
+func ProxyRecordMetric(instance common.WasmInstance, metricId int32, value int64) int32 {
 	ctx := getImportHandler(instance)
 
 	res := ctx.RecordMetric(metricId, value)
@@ -63,7 +65,7 @@ func ProxyRecordMetric(instance types.WasmInstance, metricId int32, value int64)
 	return res.Int32()
 }
 
-func ProxyGetMetric(instance types.WasmInstance, metricId int32, resultUint64Ptr int32) int32 {
+func ProxyGetMetric(instance common.WasmInstance, metricId int32, resultUint64Ptr int32) int32 {
 	ctx := getImportHandler(instance)
 
 	value, res := ctx.GetMetric(metricId)
@@ -79,7 +81,7 @@ func ProxyGetMetric(instance types.WasmInstance, metricId int32, resultUint64Ptr
 	return WasmResultOk.Int32()
 }
 
-func ProxyRemoveMetric(instance types.WasmInstance, metricID int32) int32 {
+func ProxyRemoveMetric(instance common.WasmInstance, metricID int32) int32 {
 	ctx := getImportHandler(instance)
 
 	res := ctx.RemoveMetric(metricID)

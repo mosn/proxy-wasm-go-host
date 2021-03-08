@@ -18,24 +18,22 @@
 package proxywasm
 
 import (
-	"mosn.io/pkg/buffer"
-	"mosn.io/pkg/header"
-	"mosn.io/proxy-wasm-go-host/types"
+	"mosn.io/proxy-wasm-go-host/common"
 )
 
-func ProxyResumeHttpRequest(instance types.WasmInstance) int32 {
+func ProxyResumeHttpRequest(instance common.WasmInstance) int32 {
 	ctx := getImportHandler(instance)
 
 	return ctx.ResumeHttpRequest().Int32()
 }
 
-func ProxyResumeHttpResponse(instance types.WasmInstance) int32 {
+func ProxyResumeHttpResponse(instance common.WasmInstance) int32 {
 	ctx := getImportHandler(instance)
 
 	return ctx.ResumeHttpResponse().Int32()
 }
 
-func ProxySendHttpResponse(instance types.WasmInstance, respCode int32, respCodeDetailPtr int32, respCodeDetailSize int32,
+func ProxySendHttpResponse(instance common.WasmInstance, respCode int32, respCodeDetailPtr int32, respCodeDetailSize int32,
 	respBodyPtr int32, respBodySize int32, additionalHeaderMapDataPtr int32, additionalHeaderSize int32, grpcStatus int32) int32 {
 
 	respCodeDetail, err := instance.GetMemory(uint64(respCodeDetailPtr), uint64(respCodeDetailSize))
@@ -58,12 +56,12 @@ func ProxySendHttpResponse(instance types.WasmInstance, respCode int32, respCode
 	ctx := getImportHandler(instance)
 
 	return ctx.SendHttpResp(respCode,
-		buffer.NewIoBufferBytes(respCodeDetail),
-		buffer.NewIoBufferBytes(respBody),
-		header.CommonHeader(additionalHeaderMap), grpcStatus).Int32()
+		common.NewIoBufferBytes(respCodeDetail),
+		common.NewIoBufferBytes(respBody),
+		common.CommonHeader(additionalHeaderMap), grpcStatus).Int32()
 }
 
-func ProxyHttpCall(instance types.WasmInstance, uriPtr int32, uriSize int32,
+func ProxyHttpCall(instance common.WasmInstance, uriPtr int32, uriSize int32,
 	headerPairsPtr int32, headerPairsSize int32, bodyPtr int32, bodySize int32, trailerPairsPtr int32, trailerPairsSize int32,
 	timeoutMilliseconds int32, calloutIDPtr int32) int32 {
 
@@ -93,9 +91,9 @@ func ProxyHttpCall(instance types.WasmInstance, uriPtr int32, uriSize int32,
 
 	calloutID, res := ctx.HttpCall(
 		string(url),
-		header.CommonHeader(headerMap),
-		buffer.NewIoBufferBytes(body),
-		header.CommonHeader(trailerMap),
+		common.CommonHeader(headerMap),
+		common.NewIoBufferBytes(body),
+		common.CommonHeader(trailerMap),
 		timeoutMilliseconds,
 	)
 	if res != WasmResultOk {

@@ -18,11 +18,10 @@
 package proxywasm
 
 import (
-	"mosn.io/pkg/buffer"
-	"mosn.io/proxy-wasm-go-host/types"
+	"mosn.io/proxy-wasm-go-host/common"
 )
 
-func GetBuffer(instance types.WasmInstance, bufferType BufferType) buffer.IoBuffer {
+func GetBuffer(instance common.WasmInstance, bufferType BufferType) common.IoBuffer {
 	im := getImportHandler(instance)
 
 	switch bufferType {
@@ -49,7 +48,7 @@ func GetBuffer(instance types.WasmInstance, bufferType BufferType) buffer.IoBuff
 	return nil
 }
 
-func ProxyGetBufferBytes(instance types.WasmInstance, bufferType int32, start int32, length int32, returnBufferData int32, returnBufferSize int32) int32 {
+func ProxyGetBufferBytes(instance common.WasmInstance, bufferType int32, start int32, length int32, returnBufferData int32, returnBufferSize int32) int32 {
 	if BufferType(bufferType) > BufferTypeMax {
 		return WasmResultBadArgument.Int32()
 	}
@@ -90,7 +89,7 @@ func ProxyGetBufferBytes(instance types.WasmInstance, bufferType int32, start in
 	return WasmResultOk.Int32()
 }
 
-func ProxySetBufferBytes(instance types.WasmInstance, bufferType int32, start int32, length int32, dataPtr int32, dataSize int32) int32 {
+func ProxySetBufferBytes(instance common.WasmInstance, bufferType int32, start int32, length int32, dataPtr int32, dataSize int32) int32 {
 	if BufferType(bufferType) > BufferTypeMax {
 		return WasmResultBadArgument.Int32()
 	}

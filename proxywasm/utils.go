@@ -20,10 +20,10 @@ package proxywasm
 import (
 	"encoding/binary"
 
-	"mosn.io/proxy-wasm-go-host/types"
+	"mosn.io/proxy-wasm-go-host/common"
 )
 
-func copyIntoInstance(instance types.WasmInstance, value string, retPtr int32, retSize int32) WasmResult {
+func copyIntoInstance(instance common.WasmInstance, value string, retPtr int32, retSize int32) WasmResult {
 	addr, err := instance.Malloc(int32(len(value)))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess
@@ -47,7 +47,7 @@ func copyIntoInstance(instance types.WasmInstance, value string, retPtr int32, r
 	return WasmResultOk
 }
 
-func getABIContext(instance types.WasmInstance) *ABIContext {
+func getABIContext(instance common.WasmInstance) *ABIContext {
 	if v := instance.GetData(); v != nil {
 		if im, ok := v.(*ABIContext); ok {
 			return im
@@ -57,7 +57,7 @@ func getABIContext(instance types.WasmInstance) *ABIContext {
 	return nil
 }
 
-func getImportHandler(instance types.WasmInstance) ImportsHandler {
+func getImportHandler(instance common.WasmInstance) ImportsHandler {
 	if ctx := getABIContext(instance); ctx != nil {
 		if ctx.Imports != nil {
 			return ctx.Imports

@@ -17,10 +17,7 @@
 
 package proxywasm
 
-import (
-	"mosn.io/api"
-	"mosn.io/pkg/buffer"
-)
+import "mosn.io/proxy-wasm-go-host/common"
 
 // Exports contains ABI that exported by wasm module.
 type Exports interface {
@@ -73,8 +70,8 @@ type ImportsHandler interface {
 	Done() WasmResult
 
 	// config
-	GetVmConfig() buffer.IoBuffer
-	GetPluginConfig() buffer.IoBuffer
+	GetVmConfig() common.IoBuffer
+	GetPluginConfig() common.IoBuffer
 
 	// metric
 	DefineMetric(metricType MetricType, name string) (int32, WasmResult)
@@ -88,43 +85,43 @@ type ImportsHandler interface {
 	SetProperty(key string, value string) WasmResult
 
 	// l4
-	GetDownStreamData() buffer.IoBuffer
-	GetUpstreamData() buffer.IoBuffer
+	GetDownStreamData() common.IoBuffer
+	GetUpstreamData() common.IoBuffer
 	ResumeDownstream() WasmResult
 	ResumeUpstream() WasmResult
 
 	// http
-	GetHttpRequestHeader() api.HeaderMap
-	GetHttpRequestBody() buffer.IoBuffer
-	GetHttpRequestTrailer() api.HeaderMap
+	GetHttpRequestHeader() common.HeaderMap
+	GetHttpRequestBody() common.IoBuffer
+	GetHttpRequestTrailer() common.HeaderMap
 
-	GetHttpResponseHeader() api.HeaderMap
-	GetHttpResponseBody() buffer.IoBuffer
-	GetHttpResponseTrailer() api.HeaderMap
+	GetHttpResponseHeader() common.HeaderMap
+	GetHttpResponseBody() common.IoBuffer
+	GetHttpResponseTrailer() common.HeaderMap
 
-	HttpCall(url string, headers api.HeaderMap, body buffer.IoBuffer, trailer api.HeaderMap, timeoutMilliseconds int32) (int32, WasmResult)
-	GetHttpCallResponseHeaders() api.HeaderMap
-	GetHttpCallResponseBody() buffer.IoBuffer
-	GetHttpCallResponseTrailer() api.HeaderMap
+	HttpCall(url string, headers common.HeaderMap, body common.IoBuffer, trailer common.HeaderMap, timeoutMilliseconds int32) (int32, WasmResult)
+	GetHttpCallResponseHeaders() common.HeaderMap
+	GetHttpCallResponseBody() common.IoBuffer
+	GetHttpCallResponseTrailer() common.HeaderMap
 
 	ResumeHttpRequest() WasmResult
 	ResumeHttpResponse() WasmResult
-	SendHttpResp(respCode int32, respCodeDetail buffer.IoBuffer, respBody buffer.IoBuffer, additionalHeaderMap api.HeaderMap, grpcCode int32) WasmResult
+	SendHttpResp(respCode int32, respCodeDetail common.IoBuffer, respBody common.IoBuffer, additionalHeaderMap common.HeaderMap, grpcCode int32) WasmResult
 
 	// grpc
 	OpenGrpcStream(grpcService string, serviceName string, method string) (int32, WasmResult)
-	SendGrpcCallMsg(token int32, data buffer.IoBuffer, endOfStream int32) WasmResult
+	SendGrpcCallMsg(token int32, data common.IoBuffer, endOfStream int32) WasmResult
 	CancelGrpcCall(token int32) WasmResult
 	CloseGrpcCall(token int32) WasmResult
 
-	GrpcCall(grpcService string, serviceName string, method string, data buffer.IoBuffer, timeoutMilliseconds int32) (int32, WasmResult)
-	GetGrpcReceiveInitialMetaData() api.HeaderMap
-	GetGrpcReceiveBuffer() buffer.IoBuffer
-	GetGrpcReceiveTrailerMetaData() api.HeaderMap
+	GrpcCall(grpcService string, serviceName string, method string, data common.IoBuffer, timeoutMilliseconds int32) (int32, WasmResult)
+	GetGrpcReceiveInitialMetaData() common.HeaderMap
+	GetGrpcReceiveBuffer() common.IoBuffer
+	GetGrpcReceiveTrailerMetaData() common.HeaderMap
 
 	// foreign
 	CallForeignFunction(funcName string, param string) (string, WasmResult)
-	GetFuncCallData() buffer.IoBuffer
+	GetFuncCallData() common.IoBuffer
 
 	// shared
 	GetSharedData(key string) (string, uint32, WasmResult)

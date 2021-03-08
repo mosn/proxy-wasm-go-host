@@ -20,7 +20,7 @@ package main
 import (
 	"net/http"
 
-	"mosn.io/api"
+	"mosn.io/proxy-wasm-go-host/common"
 )
 
 // wrapper for http.Header, convert Header to api.HeaderMap.
@@ -45,6 +45,6 @@ func (m *myHeaderMap) Range(f func(key string, value string) bool) {
 	}
 }
 
-func (m *myHeaderMap) Clone() api.HeaderMap { panic("implemented") }
+func (m *myHeaderMap) Clone() common.HeaderMap { panic("implemented") }
 
 func (m *myHeaderMap) ByteSize() uint64 { panic("implemented") }

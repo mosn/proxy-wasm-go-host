@@ -21,10 +21,10 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"mosn.io/proxy-wasm-go-host/types"
+	"mosn.io/proxy-wasm-go-host/common"
 )
 
-func NewWasmerInstanceFromFile(path string) types.WasmInstance {
+func NewWasmerInstanceFromFile(path string) common.WasmInstance {
 	bytes, err := ioutil.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return nil

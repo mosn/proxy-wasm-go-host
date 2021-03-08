@@ -18,10 +18,10 @@
 package proxywasm
 
 import (
-	"mosn.io/proxy-wasm-go-host/types"
+	"mosn.io/proxy-wasm-go-host/common"
 )
 
-func ProxyGetProperty(instance types.WasmInstance, keyPtr int32, keySize int32, returnValueData int32, returnValueSize int32) int32 {
+func ProxyGetProperty(instance common.WasmInstance, keyPtr int32, keySize int32, returnValueData int32, returnValueSize int32) int32 {
 	key, err := instance.GetMemory(uint64(keyPtr), uint64(keySize))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()
@@ -40,7 +40,7 @@ func ProxyGetProperty(instance types.WasmInstance, keyPtr int32, keySize int32, 
 	return copyIntoInstance(instance, value, returnValueData, returnValueSize).Int32()
 }
 
-func ProxySetProperty(instance types.WasmInstance, keyPtr int32, keySize int32, valuePtr int32, valueSize int32) int32 {
+func ProxySetProperty(instance common.WasmInstance, keyPtr int32, keySize int32, valuePtr int32, valueSize int32) int32 {
 	key, err := instance.GetMemory(uint64(keyPtr), uint64(keySize))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()
@@ -59,7 +59,7 @@ func ProxySetProperty(instance types.WasmInstance, keyPtr int32, keySize int32, 
 	return ctx.SetProperty(string(key), string(value)).Int32()
 }
 
-func ProxyRegisterSharedQueue(instance types.WasmInstance, queueNamePtr int32, queueNameSize int32, tokenPtr int32) int32 {
+func ProxyRegisterSharedQueue(instance common.WasmInstance, queueNamePtr int32, queueNameSize int32, tokenPtr int32) int32 {
 	queueName, err := instance.GetMemory(uint64(queueNamePtr), uint64(queueNameSize))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()
@@ -83,12 +83,12 @@ func ProxyRegisterSharedQueue(instance types.WasmInstance, queueNamePtr int32, q
 	return WasmResultOk.Int32()
 }
 
-func ProxyRemoveSharedQueue(instance types.WasmInstance, queueID int32) int32 {
+func ProxyRemoveSharedQueue(instance common.WasmInstance, queueID int32) int32 {
 	res := globalSharedQueueRegistry.delete(uint32(queueID))
 	return res.Int32()
 }
 
-func ProxyResolveSharedQueue(instance types.WasmInstance, queueNamePtr int32, queueNameSize int32, tokenPtr int32) int32 {
+func ProxyResolveSharedQueue(instance common.WasmInstance, queueNamePtr int32, queueNameSize int32, tokenPtr int32) int32 {
 	queueName, err := instance.GetMemory(uint64(queueNamePtr), uint64(queueNameSize))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()
@@ -112,7 +112,7 @@ func ProxyResolveSharedQueue(instance types.WasmInstance, queueNamePtr int32, qu
 	return WasmResultOk.Int32()
 }
 
-func ProxyDequeueSharedQueue(instance types.WasmInstance, token int32, dataPtr int32, dataSize int32) int32 {
+func ProxyDequeueSharedQueue(instance common.WasmInstance, token int32, dataPtr int32, dataSize int32) int32 {
 	ctx := getImportHandler(instance)
 
 	value, res := ctx.DequeueSharedQueue(uint32(token))
@@ -123,7 +123,7 @@ func ProxyDequeueSharedQueue(instance types.WasmInstance, token int32, dataPtr i
 	return copyIntoInstance(instance, value, dataPtr, dataSize).Int32()
 }
 
-func ProxyEnqueueSharedQueue(instance types.WasmInstance, token int32, dataPtr int32, dataSize int32) int32 {
+func ProxyEnqueueSharedQueue(instance common.WasmInstance, token int32, dataPtr int32, dataSize int32) int32 {
 	value, err := instance.GetMemory(uint64(dataPtr), uint64(dataSize))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()
@@ -134,7 +134,7 @@ func ProxyEnqueueSharedQueue(instance types.WasmInstance, token int32, dataPtr i
 	return ctx.EnqueueSharedQueue(uint32(token), string(value)).Int32()
 }
 
-func ProxyGetSharedData(instance types.WasmInstance, keyPtr int32, keySize int32, valuePtr int32, valueSizePtr int32, casPtr int32) int32 {
+func ProxyGetSharedData(instance common.WasmInstance, keyPtr int32, keySize int32, valuePtr int32, valueSizePtr int32, casPtr int32) int32 {
 	key, err := instance.GetMemory(uint64(keyPtr), uint64(keySize))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()
@@ -163,7 +163,7 @@ func ProxyGetSharedData(instance types.WasmInstance, keyPtr int32, keySize int32
 	return WasmResultOk.Int32()
 }
 
-func ProxySetSharedData(instance types.WasmInstance, keyPtr int32, keySize int32, valuePtr int32, valueSize int32, cas int32) int32 {
+func ProxySetSharedData(instance common.WasmInstance, keyPtr int32, keySize int32, valuePtr int32, valueSize int32, cas int32) int32 {
 	key, err := instance.GetMemory(uint64(keyPtr), uint64(keySize))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()
