@@ -23,6 +23,18 @@ import (
 
 const ProxyWasmABI_0_1_0 string = "proxy_abi_version_0_1_0"
 
+type ContextHandler interface {
+	Name() string
+
+	GetImports() ImportsHandler
+	SetImports(imports ImportsHandler)
+
+	GetExports() Exports
+
+	GetInstance() common.WasmInstance
+	SetInstance(instance common.WasmInstance)
+}
+
 type ABIContext struct {
 	Imports  ImportsHandler
 	Instance common.WasmInstance
@@ -36,8 +48,16 @@ func (a *ABIContext) GetExports() Exports {
 	return a
 }
 
+func (a *ABIContext) GetImports() ImportsHandler {
+	return a.Imports
+}
+
 func (a *ABIContext) SetImports(imports ImportsHandler) {
 	a.Imports = imports
+}
+
+func (a *ABIContext) GetInstance() common.WasmInstance {
+	return a.Instance
 }
 
 func (a *ABIContext) SetInstance(instance common.WasmInstance) {

@@ -132,4 +132,8 @@ type ImportsHandler interface {
 	ResolveSharedQueue(queueName string) (uint32, WasmResult)
 	EnqueueSharedQueue(queueID uint32, data string) WasmResult
 	DequeueSharedQueue(queueID uint32) (string, WasmResult)
+
+	// for golang host environment
+	// Wait until async call return, eg. sync http call in golang
+	Wait()
 }

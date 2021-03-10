@@ -29,6 +29,8 @@ func (a *ABIContext) ProxyOnContextCreate(contextId int32, parentContextId int32
 		return err
 	}
 
+	a.Imports.Wait()
+
 	return nil
 }
 
@@ -43,6 +45,8 @@ func (a *ABIContext) ProxyOnDone(contextId int32) (int32, error) {
 		a.Instance.HandleError(err)
 		return 0, err
 	}
+
+	a.Imports.Wait()
 
 	return res.(int32), nil
 }
@@ -59,6 +63,8 @@ func (a *ABIContext) ProxyOnLog(contextId int32) error {
 		return err
 	}
 
+	a.Imports.Wait()
+
 	return nil
 }
 
@@ -73,6 +79,8 @@ func (a *ABIContext) ProxyOnVmStart(rootContextId int32, vmConfigurationSize int
 		a.Instance.HandleError(err)
 		return 0, err
 	}
+
+	a.Imports.Wait()
 
 	return res.(int32), nil
 }
@@ -89,6 +97,8 @@ func (a *ABIContext) ProxyOnDelete(contextId int32) error {
 		return err
 	}
 
+	a.Imports.Wait()
+
 	return nil
 }
 
@@ -103,6 +113,8 @@ func (a *ABIContext) ProxyOnConfigure(rootContextId int32, configurationSize int
 		a.Instance.HandleError(err)
 		return 0, err
 	}
+
+	a.Imports.Wait()
 
 	return res.(int32), nil
 }
@@ -119,6 +131,8 @@ func (a *ABIContext) ProxyOnTick(rootContextId int32) error {
 		return err
 	}
 
+	a.Imports.Wait()
+
 	return nil
 }
 
@@ -133,6 +147,8 @@ func (a *ABIContext) ProxyOnNewConnection(contextId int32) (Action, error) {
 		a.Instance.HandleError(err)
 		return ActionPause, err
 	}
+
+	a.Imports.Wait()
 
 	return Action(res.(int32)), nil
 }
@@ -149,6 +165,8 @@ func (a *ABIContext) ProxyOnDownstreamData(contextId int32, dataLength int32, en
 		return ActionPause, err
 	}
 
+	a.Imports.Wait()
+
 	return Action(res.(int32)), nil
 }
 
@@ -163,6 +181,8 @@ func (a *ABIContext) ProxyOnDownstreamConnectionClose(contextId int32, closeType
 		a.Instance.HandleError(err)
 		return err
 	}
+
+	a.Imports.Wait()
 
 	return nil
 }
@@ -179,6 +199,8 @@ func (a *ABIContext) ProxyOnUpstreamData(contextId int32, dataLength int32, endO
 		return ActionPause, err
 	}
 
+	a.Imports.Wait()
+
 	return Action(res.(int32)), nil
 }
 
@@ -193,6 +215,8 @@ func (a *ABIContext) ProxyOnUpstreamConnectionClose(contextId int32, closeType i
 		a.Instance.HandleError(err)
 		return err
 	}
+
+	a.Imports.Wait()
 
 	return nil
 }
@@ -209,6 +233,8 @@ func (a *ABIContext) ProxyOnRequestHeaders(contextID int32, numHeaders int32, en
 		return ActionPause, err
 	}
 
+	a.Imports.Wait()
+
 	return Action(res.(int32)), nil
 }
 
@@ -223,6 +249,8 @@ func (a *ABIContext) ProxyOnRequestBody(contextId int32, bodyBufferLength int32,
 		a.Instance.HandleError(err)
 		return ActionPause, err
 	}
+
+	a.Imports.Wait()
 
 	return Action(res.(int32)), nil
 }
@@ -239,6 +267,8 @@ func (a *ABIContext) ProxyOnRequestTrailers(contextId int32, trailers int32) (Ac
 		return ActionPause, err
 	}
 
+	a.Imports.Wait()
+
 	return Action(res.(int32)), nil
 }
 
@@ -253,6 +283,8 @@ func (a *ABIContext) ProxyOnRequestMetadata(contextId int32, nElements int32) (A
 		a.Instance.HandleError(err)
 		return ActionPause, err
 	}
+
+	a.Imports.Wait()
 
 	return Action(res.(int32)), nil
 }
@@ -269,6 +301,8 @@ func (a *ABIContext) ProxyOnResponseHeaders(contextId int32, headers int32, endO
 		return ActionPause, err
 	}
 
+	a.Imports.Wait()
+
 	return Action(res.(int32)), nil
 }
 
@@ -283,6 +317,8 @@ func (a *ABIContext) ProxyOnResponseBody(contextId int32, bodyBufferLength int32
 		a.Instance.HandleError(err)
 		return ActionPause, err
 	}
+
+	a.Imports.Wait()
 
 	return Action(res.(int32)), nil
 }
@@ -299,6 +335,8 @@ func (a *ABIContext) ProxyOnResponseTrailers(contextId int32, trailers int32) (A
 		return ActionPause, err
 	}
 
+	a.Imports.Wait()
+
 	return Action(res.(int32)), nil
 }
 
@@ -313,6 +351,8 @@ func (a *ABIContext) ProxyOnResponseMetadata(contextId int32, nElements int32) (
 		a.Instance.HandleError(err)
 		return ActionPause, err
 	}
+
+	a.Imports.Wait()
 
 	return Action(res.(int32)), nil
 }
@@ -329,6 +369,8 @@ func (a *ABIContext) ProxyOnHttpCallResponse(contextId int32, token int32, heade
 		return err
 	}
 
+	a.Imports.Wait()
+
 	return nil
 }
 
@@ -343,6 +385,8 @@ func (a *ABIContext) ProxyOnQueueReady(rootContextId int32, token int32) error {
 		a.Instance.HandleError(err)
 		return err
 	}
+
+	a.Imports.Wait()
 
 	return nil
 }
@@ -359,6 +403,8 @@ func (a *ABIContext) ProxyOnMemoryAllocate(size int32) (int32, error) {
 		return 0, err
 	}
 
+	a.Imports.Wait()
+
 	return res.(int32), nil
 }
 
@@ -373,6 +419,8 @@ func (a *ABIContext) ProxyOnGrpcCallResponseHeaderMetadata(contextID int32, call
 		a.Instance.HandleError(err)
 		return err
 	}
+
+	a.Imports.Wait()
 
 	return nil
 }
@@ -389,6 +437,8 @@ func (a *ABIContext) ProxyOnGrpcCallResponseMessage(contextID int32, calloutID i
 		return err
 	}
 
+	a.Imports.Wait()
+
 	return nil
 }
 
@@ -404,6 +454,8 @@ func (a *ABIContext) ProxyOnGrpcCallResponseTrailerMetadata(contextID int32, cal
 		return err
 	}
 
+	a.Imports.Wait()
+
 	return nil
 }
 
@@ -418,6 +470,8 @@ func (a *ABIContext) ProxyOnGrpcCallClose(contextID int32, calloutID int32, stat
 		a.Instance.HandleError(err)
 		return err
 	}
+
+	a.Imports.Wait()
 
 	return nil
 }

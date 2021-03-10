@@ -47,9 +47,9 @@ func copyIntoInstance(instance common.WasmInstance, value string, retPtr int32, 
 	return WasmResultOk
 }
 
-func getABIContext(instance common.WasmInstance) *ABIContext {
+func getContextHandler(instance common.WasmInstance) ContextHandler {
 	if v := instance.GetData(); v != nil {
-		if im, ok := v.(*ABIContext); ok {
+		if im, ok := v.(ContextHandler); ok {
 			return im
 		}
 	}
@@ -58,9 +58,9 @@ func getABIContext(instance common.WasmInstance) *ABIContext {
 }
 
 func getImportHandler(instance common.WasmInstance) ImportsHandler {
-	if ctx := getABIContext(instance); ctx != nil {
-		if ctx.Imports != nil {
-			return ctx.Imports
+	if ctx := getContextHandler(instance); ctx != nil {
+		if im := ctx.GetImports(); im != nil {
+			return im
 		}
 	}
 
