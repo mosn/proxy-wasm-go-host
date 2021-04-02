@@ -118,7 +118,7 @@ func DecodeMap(rawData []byte) map[string]string {
 		return nil
 	}
 
-	res := make(map[string]string)
+	res := make(map[string]string, headerSize)
 
 	for i := 0; i < int(headerSize); i++ {
 		lenIndex := 4 + (4+4)*i
