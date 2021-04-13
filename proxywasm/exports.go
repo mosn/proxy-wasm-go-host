@@ -17,461 +17,236 @@
 
 package proxywasm
 
-func (a *ABIContext) ProxyOnContextCreate(contextId int32, parentContextId int32) error {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_context_create")
+func (a *ABIContext) CallWasmFunction(funcName string, args ...interface{}) (interface{}, error) {
+	ff, err := a.Instance.GetExportsFunc(funcName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = ff.Call(contextId, parentContextId)
+	res, err := ff.Call(args...)
 	if err != nil {
 		a.Instance.HandleError(err)
-		return err
+		return nil, err
 	}
 
+	// if we have sync call, e.g. HttpCall, then unlock the wasm instance and wait until it resp
 	a.Imports.Wait()
 
+	return res, nil
+}
+
+func (a *ABIContext) ProxyOnContextCreate(contextID int32, parentContextID int32) error {
+	_, err := a.CallWasmFunction("proxy_on_context_create", contextID, parentContextID)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (a *ABIContext) ProxyOnDone(contextId int32) (int32, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_done")
+func (a *ABIContext) ProxyOnDone(contextID int32) (int32, error) {
+	res, err := a.CallWasmFunction("proxy_on_done", contextID)
 	if err != nil {
 		return 0, err
 	}
-
-	res, err := ff.Call(contextId)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return 0, err
-	}
-
-	a.Imports.Wait()
-
 	return res.(int32), nil
 }
 
-func (a *ABIContext) ProxyOnLog(contextId int32) error {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_log")
+func (a *ABIContext) ProxyOnLog(contextID int32) error {
+	_, err := a.CallWasmFunction("proxy_on_log", contextID)
 	if err != nil {
 		return err
 	}
-
-	_, err = ff.Call(contextId)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return err
-	}
-
-	a.Imports.Wait()
-
 	return nil
 }
 
-func (a *ABIContext) ProxyOnVmStart(rootContextId int32, vmConfigurationSize int32) (int32, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_vm_start")
+func (a *ABIContext) ProxyOnVmStart(rootContextID int32, vmConfigurationSize int32) (int32, error) {
+	res, err := a.CallWasmFunction("proxy_on_vm_start", rootContextID, vmConfigurationSize)
 	if err != nil {
 		return 0, err
 	}
-
-	res, err := ff.Call(rootContextId, vmConfigurationSize)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return 0, err
-	}
-
-	a.Imports.Wait()
-
 	return res.(int32), nil
 }
 
-func (a *ABIContext) ProxyOnDelete(contextId int32) error {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_delete")
+func (a *ABIContext) ProxyOnDelete(contextID int32) error {
+	_, err := a.CallWasmFunction("proxy_on_delete", contextID)
 	if err != nil {
 		return err
 	}
-
-	_, err = ff.Call(contextId)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return err
-	}
-
-	a.Imports.Wait()
-
 	return nil
 }
 
-func (a *ABIContext) ProxyOnConfigure(rootContextId int32, configurationSize int32) (int32, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_configure")
+func (a *ABIContext) ProxyOnConfigure(rootContextID int32, configurationSize int32) (int32, error) {
+	res, err := a.CallWasmFunction("proxy_on_configure", rootContextID, configurationSize)
 	if err != nil {
 		return 0, err
 	}
-
-	res, err := ff.Call(rootContextId, configurationSize)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return 0, err
-	}
-
-	a.Imports.Wait()
-
 	return res.(int32), nil
 }
 
-func (a *ABIContext) ProxyOnTick(rootContextId int32) error {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_tick")
+func (a *ABIContext) ProxyOnTick(rootContextID int32) error {
+	_, err := a.CallWasmFunction("proxy_on_tick", rootContextID)
 	if err != nil {
 		return err
 	}
-
-	_, err = ff.Call(rootContextId)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return err
-	}
-
-	a.Imports.Wait()
-
 	return nil
 }
 
-func (a *ABIContext) ProxyOnNewConnection(contextId int32) (Action, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_new_connection")
+func (a *ABIContext) ProxyOnNewConnection(contextID int32) (Action, error) {
+	res, err := a.CallWasmFunction("proxy_on_new_connection", contextID)
 	if err != nil {
 		return ActionPause, err
 	}
-
-	res, err := ff.Call(contextId)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	a.Imports.Wait()
-
 	return Action(res.(int32)), nil
 }
 
-func (a *ABIContext) ProxyOnDownstreamData(contextId int32, dataLength int32, endOfStream int32) (Action, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_downstream_data")
+func (a *ABIContext) ProxyOnDownstreamData(contextID int32, dataLength int32, endOfStream int32) (Action, error) {
+	res, err := a.CallWasmFunction("proxy_on_downstream_data", contextID, dataLength, endOfStream)
 	if err != nil {
 		return ActionPause, err
 	}
-
-	res, err := ff.Call(contextId, dataLength, endOfStream)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	a.Imports.Wait()
-
 	return Action(res.(int32)), nil
 }
 
-func (a *ABIContext) ProxyOnDownstreamConnectionClose(contextId int32, closeType int32) error {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_downstream_connection_close")
+func (a *ABIContext) ProxyOnDownstreamConnectionClose(contextID int32, closeType int32) error {
+	_, err := a.CallWasmFunction("proxy_on_downstream_connection_close", contextID, closeType)
 	if err != nil {
 		return err
 	}
-
-	_, err = ff.Call(contextId, closeType)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return err
-	}
-
-	a.Imports.Wait()
-
 	return nil
 }
 
-func (a *ABIContext) ProxyOnUpstreamData(contextId int32, dataLength int32, endOfStream int32) (Action, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_upstream_data")
+func (a *ABIContext) ProxyOnUpstreamData(contextID int32, dataLength int32, endOfStream int32) (Action, error) {
+	res, err := a.CallWasmFunction("proxy_on_upstream_data", contextID, dataLength, endOfStream)
 	if err != nil {
 		return ActionPause, err
 	}
-
-	res, err := ff.Call(contextId, dataLength, endOfStream)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	a.Imports.Wait()
-
 	return Action(res.(int32)), nil
 }
 
-func (a *ABIContext) ProxyOnUpstreamConnectionClose(contextId int32, closeType int32) error {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_upstream_connection_close")
+func (a *ABIContext) ProxyOnUpstreamConnectionClose(contextID int32, closeType int32) error {
+	_, err := a.CallWasmFunction("proxy_on_upstream_connection_close", contextID, closeType)
 	if err != nil {
 		return err
 	}
-
-	_, err = ff.Call(contextId, closeType)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return err
-	}
-
-	a.Imports.Wait()
-
 	return nil
 }
 
 func (a *ABIContext) ProxyOnRequestHeaders(contextID int32, numHeaders int32, endOfStream int32) (Action, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_request_headers")
+	res, err := a.CallWasmFunction("proxy_on_request_headers", contextID, numHeaders, endOfStream)
 	if err != nil {
 		return ActionPause, err
 	}
-
-	res, err := ff.Call(contextID, numHeaders, endOfStream)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	a.Imports.Wait()
-
 	return Action(res.(int32)), nil
 }
 
-func (a *ABIContext) ProxyOnRequestBody(contextId int32, bodyBufferLength int32, endOfStream int32) (Action, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_request_body")
+func (a *ABIContext) ProxyOnRequestBody(contextID int32, bodyBufferLength int32, endOfStream int32) (Action, error) {
+	res, err := a.CallWasmFunction("proxy_on_request_body", contextID, bodyBufferLength, endOfStream)
 	if err != nil {
 		return ActionPause, err
 	}
-
-	res, err := ff.Call(contextId, bodyBufferLength, endOfStream)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	a.Imports.Wait()
-
 	return Action(res.(int32)), nil
 }
 
-func (a *ABIContext) ProxyOnRequestTrailers(contextId int32, trailers int32) (Action, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_request_trailers")
+func (a *ABIContext) ProxyOnRequestTrailers(contextID int32, trailers int32) (Action, error) {
+	res, err := a.CallWasmFunction("proxy_on_request_trailers", contextID, trailers)
 	if err != nil {
 		return ActionPause, err
 	}
-
-	res, err := ff.Call(contextId, trailers)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	a.Imports.Wait()
-
 	return Action(res.(int32)), nil
 }
 
-func (a *ABIContext) ProxyOnRequestMetadata(contextId int32, nElements int32) (Action, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_request_metadata")
+func (a *ABIContext) ProxyOnRequestMetadata(contextID int32, nElements int32) (Action, error) {
+	res, err := a.CallWasmFunction("proxy_on_request_metadata", contextID, nElements)
 	if err != nil {
 		return ActionPause, err
 	}
-
-	res, err := ff.Call(contextId, nElements)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	a.Imports.Wait()
-
 	return Action(res.(int32)), nil
 }
 
-func (a *ABIContext) ProxyOnResponseHeaders(contextId int32, headers int32, endOfStream int32) (Action, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_response_headers")
+func (a *ABIContext) ProxyOnResponseHeaders(contextID int32, headers int32, endOfStream int32) (Action, error) {
+	res, err := a.CallWasmFunction("proxy_on_response_headers", contextID, headers, endOfStream)
 	if err != nil {
 		return ActionPause, err
 	}
-
-	res, err := ff.Call(contextId, headers, endOfStream)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	a.Imports.Wait()
-
 	return Action(res.(int32)), nil
 }
 
-func (a *ABIContext) ProxyOnResponseBody(contextId int32, bodyBufferLength int32, endOfStream int32) (Action, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_response_body")
+func (a *ABIContext) ProxyOnResponseBody(contextID int32, bodyBufferLength int32, endOfStream int32) (Action, error) {
+	res, err := a.CallWasmFunction("proxy_on_response_body", contextID, bodyBufferLength, endOfStream)
 	if err != nil {
 		return ActionPause, err
 	}
-
-	res, err := ff.Call(contextId, bodyBufferLength, endOfStream)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	a.Imports.Wait()
-
 	return Action(res.(int32)), nil
 }
 
-func (a *ABIContext) ProxyOnResponseTrailers(contextId int32, trailers int32) (Action, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_response_trailers")
+func (a *ABIContext) ProxyOnResponseTrailers(contextID int32, trailers int32) (Action, error) {
+	res, err := a.CallWasmFunction("proxy_on_response_trailers", contextID, trailers)
 	if err != nil {
 		return ActionPause, err
 	}
-
-	res, err := ff.Call(contextId, trailers)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	a.Imports.Wait()
-
 	return Action(res.(int32)), nil
 }
 
-func (a *ABIContext) ProxyOnResponseMetadata(contextId int32, nElements int32) (Action, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_response_metadata")
+func (a *ABIContext) ProxyOnResponseMetadata(contextID int32, nElements int32) (Action, error) {
+	res, err := a.CallWasmFunction("proxy_on_response_metadata", contextID, nElements)
 	if err != nil {
 		return ActionPause, err
 	}
-
-	res, err := ff.Call(contextId, nElements)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return ActionPause, err
-	}
-
-	a.Imports.Wait()
-
 	return Action(res.(int32)), nil
 }
 
-func (a *ABIContext) ProxyOnHttpCallResponse(contextId int32, token int32, headers int32, bodySize int32, trailers int32) error {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_http_call_response")
+func (a *ABIContext) ProxyOnHttpCallResponse(contextID int32, token int32, headers int32, bodySize int32, trailers int32) error {
+	_, err := a.CallWasmFunction("proxy_on_http_call_response", contextID, token, headers, bodySize, trailers)
 	if err != nil {
 		return err
 	}
-
-	_, err = ff.Call(contextId, token, headers, bodySize, trailers)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return err
-	}
-
-	a.Imports.Wait()
-
 	return nil
 }
 
-func (a *ABIContext) ProxyOnQueueReady(rootContextId int32, token int32) error {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_queue_ready")
+func (a *ABIContext) ProxyOnQueueReady(rootContextID int32, token int32) error {
+	_, err := a.CallWasmFunction("proxy_on_queue_ready", rootContextID, token)
 	if err != nil {
 		return err
 	}
-
-	_, err = ff.Call(rootContextId, token)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return err
-	}
-
-	a.Imports.Wait()
-
 	return nil
 }
 
 func (a *ABIContext) ProxyOnMemoryAllocate(size int32) (int32, error) {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_memory_allocate")
+	res, err := a.CallWasmFunction("proxy_on_memory_allocate", size)
 	if err != nil {
 		return 0, err
 	}
-
-	res, err := ff.Call(size)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return 0, err
-	}
-
-	a.Imports.Wait()
-
 	return res.(int32), nil
 }
 
 func (a *ABIContext) ProxyOnGrpcCallResponseHeaderMetadata(contextID int32, calloutID int32, nElements int32) error {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_grpc_call_response_header_metadata")
+	_, err := a.CallWasmFunction("proxy_on_grpc_call_response_header_metadata", contextID, calloutID, nElements)
 	if err != nil {
 		return err
 	}
-
-	_, err = ff.Call(contextID, calloutID, nElements)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return err
-	}
-
-	a.Imports.Wait()
-
 	return nil
 }
 
 func (a *ABIContext) ProxyOnGrpcCallResponseMessage(contextID int32, calloutID int32, msgSize int32) error {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_grpc_call_response_message")
+	_, err := a.CallWasmFunction("proxy_on_grpc_call_response_message", contextID, calloutID, msgSize)
 	if err != nil {
 		return err
 	}
-
-	_, err = ff.Call(contextID, calloutID, msgSize)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return err
-	}
-
-	a.Imports.Wait()
-
 	return nil
 }
 
 func (a *ABIContext) ProxyOnGrpcCallResponseTrailerMetadata(contextID int32, calloutID int32, nElements int32) error {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_grpc_call_response_trailer_metadata")
+	_, err := a.CallWasmFunction("proxy_on_grpc_call_response_trailer_metadata", contextID, calloutID, nElements)
 	if err != nil {
 		return err
 	}
-
-	_, err = ff.Call(contextID, calloutID, nElements)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return err
-	}
-
-	a.Imports.Wait()
-
 	return nil
 }
 
 func (a *ABIContext) ProxyOnGrpcCallClose(contextID int32, calloutID int32, statusCode int32) error {
-	ff, err := a.Instance.GetExportsFunc("proxy_on_grpc_call_close")
+	_, err := a.CallWasmFunction("proxy_on_grpc_call_close", contextID, calloutID, statusCode)
 	if err != nil {
 		return err
 	}
-
-	_, err = ff.Call(contextID, calloutID, statusCode)
-	if err != nil {
-		a.Instance.HandleError(err)
-		return err
-	}
-
-	a.Imports.Wait()
-
 	return nil
 }
