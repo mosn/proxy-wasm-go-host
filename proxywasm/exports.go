@@ -35,8 +35,8 @@ func (a *ABIContext) CallWasmFunction(funcName string, args ...interface{}) (int
 	return res, nil
 }
 
-func (a *ABIContext) ProxyOnContextCreate(contextID int32, parentContextId int32) error {
-	_, err := a.CallWasmFunction("proxy_on_context_create", contextID, parentContextId)
+func (a *ABIContext) ProxyOnContextCreate(contextID int32, parentContextID int32) error {
+	_, err := a.CallWasmFunction("proxy_on_context_create", contextID, parentContextID)
 	if err != nil {
 		return err
 	}
@@ -59,8 +59,8 @@ func (a *ABIContext) ProxyOnLog(contextID int32) error {
 	return nil
 }
 
-func (a *ABIContext) ProxyOnVmStart(rootContextId int32, vmConfigurationSize int32) (int32, error) {
-	res, err := a.CallWasmFunction("proxy_on_vm_start", rootContextId, vmConfigurationSize)
+func (a *ABIContext) ProxyOnVmStart(rootContextID int32, vmConfigurationSize int32) (int32, error) {
+	res, err := a.CallWasmFunction("proxy_on_vm_start", rootContextID, vmConfigurationSize)
 	if err != nil {
 		return 0, err
 	}
@@ -75,16 +75,16 @@ func (a *ABIContext) ProxyOnDelete(contextID int32) error {
 	return nil
 }
 
-func (a *ABIContext) ProxyOnConfigure(rootContextId int32, configurationSize int32) (int32, error) {
-	res, err := a.CallWasmFunction("proxy_on_configure", rootContextId, configurationSize)
+func (a *ABIContext) ProxyOnConfigure(rootContextID int32, configurationSize int32) (int32, error) {
+	res, err := a.CallWasmFunction("proxy_on_configure", rootContextID, configurationSize)
 	if err != nil {
 		return 0, err
 	}
 	return res.(int32), nil
 }
 
-func (a *ABIContext) ProxyOnTick(rootContextId int32) error {
-	_, err := a.CallWasmFunction("proxy_on_tick", rootContextId)
+func (a *ABIContext) ProxyOnTick(rootContextID int32) error {
+	_, err := a.CallWasmFunction("proxy_on_tick", rootContextID)
 	if err != nil {
 		return err
 	}
@@ -203,8 +203,8 @@ func (a *ABIContext) ProxyOnHttpCallResponse(contextID int32, token int32, heade
 	return nil
 }
 
-func (a *ABIContext) ProxyOnQueueReady(rootContextId int32, token int32) error {
-	_, err := a.CallWasmFunction("proxy_on_queue_ready", rootContextId, token)
+func (a *ABIContext) ProxyOnQueueReady(rootContextID int32, token int32) error {
+	_, err := a.CallWasmFunction("proxy_on_queue_ready", rootContextID, token)
 	if err != nil {
 		return err
 	}

@@ -21,16 +21,16 @@ import "mosn.io/proxy-wasm-go-host/common"
 
 // Exports contains ABI that exported by wasm module.
 type Exports interface {
-	ProxyOnContextCreate(contextID int32, parentContextId int32) error
+	ProxyOnContextCreate(contextID int32, parentContextID int32) error
 	ProxyOnDone(contextID int32) (int32, error)
 	ProxyOnLog(contextID int32) error
 	ProxyOnDelete(contextID int32) error
 	ProxyOnMemoryAllocate(size int32) (int32, error)
 
-	ProxyOnVmStart(rootContextId int32, vmConfigurationSize int32) (int32, error)
-	ProxyOnConfigure(rootContextId int32, pluginConfigurationSize int32) (int32, error)
+	ProxyOnVmStart(rootContextID int32, vmConfigurationSize int32) (int32, error)
+	ProxyOnConfigure(rootContextID int32, pluginConfigurationSize int32) (int32, error)
 
-	ProxyOnTick(rootContextId int32) error
+	ProxyOnTick(rootContextID int32) error
 
 	ProxyOnNewConnection(contextID int32) (Action, error)
 
@@ -52,7 +52,7 @@ type Exports interface {
 
 	ProxyOnHttpCallResponse(contextID int32, token int32, headers int32, bodySize int32, trailers int32) error
 
-	ProxyOnQueueReady(rootContextId int32, token int32) error
+	ProxyOnQueueReady(rootContextID int32, token int32) error
 
 	ProxyOnGrpcCallResponseHeaderMetadata(contextID int32, calloutID int32, nElements int32) error
 	ProxyOnGrpcCallResponseMessage(contextID int32, calloutID int32, msgSize int32) error
