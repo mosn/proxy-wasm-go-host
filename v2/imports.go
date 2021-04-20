@@ -661,7 +661,6 @@ func ProxyDeleteMetric(instance common.WasmInstance, metricID int32) Result {
 func ProxyDispatchHttpCall(instance common.WasmInstance, upstreamNameData int32, upstreamNameSize int32, headersMapData int32, headersMapSize int32,
 	bodyData int32, bodySize int32, trailersMapData int32, trailersMapSize int32, timeoutMilliseconds int32,
 	returnCalloutID int32) Result {
-
 	upstream, err := instance.GetMemory(uint64(upstreamNameData), uint64(upstreamNameSize))
 	if err != nil {
 		return ResultInvalidMemoryAccess
@@ -705,7 +704,6 @@ func ProxyDispatchHttpCall(instance common.WasmInstance, upstreamNameData int32,
 func ProxyDispatchGrpcCall(instance common.WasmInstance, upstreamNameData int32, upstreamNameSize int32, serviceNameData int32, serviceNameSize int32,
 	serviceMethodData int32, serviceMethodSize int32, initialMetadataMapData int32, initialMetadataMapSize int32,
 	grpcMessageData int32, grpcMessageSize int32, timeoutMilliseconds int32, returnCalloutID int32) Result {
-
 	upstream, err := instance.GetMemory(uint64(upstreamNameData), uint64(upstreamNameSize))
 	if err != nil {
 		return ResultInvalidMemoryAccess
@@ -751,7 +749,6 @@ func ProxyDispatchGrpcCall(instance common.WasmInstance, upstreamNameData int32,
 func ProxyOpenGrpcStream(instance common.WasmInstance, upstreamNameData int32, upstreamNameSize int32, serviceNameData int32, serviceNameSize int32,
 	serviceMethodData int32, serviceMethodSize int32, initialMetadataMapData int32, initialMetadataMapSize int32,
 	returnCalloutID int32) Result {
-
 	upstream, err := instance.GetMemory(uint64(upstreamNameData), uint64(upstreamNameSize))
 	if err != nil {
 		return ResultInvalidMemoryAccess
