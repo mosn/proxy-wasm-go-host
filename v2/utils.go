@@ -15,32 +15,39 @@
  * limitations under the License.
  */
 
-package proxywasm
+package v2
 
 import "mosn.io/proxy-wasm-go-host/common"
 
-func copyIntoInstance(instance common.WasmInstance, value string, retPtr int32, retSize int32) WasmResult {
+func intToBool(i int32) bool {
+	if i == 0 {
+		return false
+	}
+	return true
+}
+
+func copyIntoInstance(instance common.WasmInstance, value []byte, retPtr int32, retSize int32) Result {
 	addr, err := instance.Malloc(int32(len(value)))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess
+		return ResultInvalidMemoryAccess
 	}
 
-	err = instance.PutMemory(addr, uint64(len(value)), []byte(value))
+	err = instance.PutMemory(addr, uint64(len(value)), value)
 	if err != nil {
-		return WasmResultInvalidMemoryAccess
+		return ResultInvalidMemoryAccess
 	}
 
 	err = instance.PutUint32(uint64(retPtr), uint32(addr))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess
+		return ResultInvalidMemoryAccess
 	}
 
 	err = instance.PutUint32(uint64(retSize), uint32(len(value)))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess
+		return ResultInvalidMemoryAccess
 	}
 
-	return WasmResultOk
+	return ResultOk
 }
 
 func getContextHandler(instance common.WasmInstance) ContextHandler {

@@ -15,30 +15,6 @@
  * limitations under the License.
  */
 
-package proxywasm
+package v2
 
-import (
-	"reflect"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
-func TestEncodeDecodeMap(t *testing.T) {
-	m := map[string]string{
-		"key1": "value1",
-		"key2": "value2",
-		"key3": "value3",
-	}
-
-	b := EncodeMap(m)
-	assert.NotNil(t, b)
-
-	mm := DecodeMap(b)
-	assert.NotNil(t, mm)
-
-	assert.True(t, reflect.DeepEqual(m, mm))
-
-	var emptyMap map[string]string
-	assert.Nil(t, EncodeMap(emptyMap))
-}
+// spec: https://github.com/proxy-wasm/spec/blob/cc53262df056036427476b272fb8f2438aa7975f/abi-versions/vNEXT/README.md
