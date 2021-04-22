@@ -20,7 +20,7 @@ package main
 import (
 	"net/http"
 
-	"mosn.io/proxy-wasm-go-host/common"
+	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 
 // wrapper for http.Header, convert Header to api.HeaderMap.

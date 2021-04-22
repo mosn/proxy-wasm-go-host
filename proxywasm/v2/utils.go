@@ -17,7 +17,7 @@
 
 package v2
 
-import "mosn.io/proxy-wasm-go-host/common"
+import "mosn.io/proxy-wasm-go-host/proxywasm/common"
 
 func intToBool(i int32) bool {
 	if i == 0 {

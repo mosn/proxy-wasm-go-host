@@ -17,7 +17,7 @@
 
 package v2
 
-import "mosn.io/proxy-wasm-go-host/common"
+import "mosn.io/proxy-wasm-go-host/proxywasm/common"
 
 type ImportsHandler interface {
 	// for golang host environment

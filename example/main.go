@@ -25,8 +25,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"mosn.io/proxy-wasm-go-host/common"
-	"mosn.io/proxy-wasm-go-host/proxywasm"
+	"mosn.io/proxy-wasm-go-host/proxywasm/common"
+	proxywasm "mosn.io/proxy-wasm-go-host/proxywasm/v1"
 	"mosn.io/proxy-wasm-go-host/wasmer"
 )
 

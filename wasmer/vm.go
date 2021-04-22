@@ -19,7 +19,7 @@ package wasmer
 
 import (
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
-	"mosn.io/proxy-wasm-go-host/common"
+	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 
 type VM struct {

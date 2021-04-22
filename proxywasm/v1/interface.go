@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-package proxywasm
+package v1
 
-import "mosn.io/proxy-wasm-go-host/common"
+import "mosn.io/proxy-wasm-go-host/proxywasm/common"
 
 // Exports contains ABI that exported by wasm module.
 type Exports interface {

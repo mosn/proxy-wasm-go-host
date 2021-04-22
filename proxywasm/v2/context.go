@@ -17,7 +17,7 @@
 
 package v2
 
-import "mosn.io/proxy-wasm-go-host/common"
+import "mosn.io/proxy-wasm-go-host/proxywasm/common"
 
 const ProxyWasmABI_0_2_0 string = "proxy_abi_version_0_2_0"
 
