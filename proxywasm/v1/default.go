@@ -29,7 +29,7 @@ import (
 type DefaultImportsHandler struct{}
 
 // for golang host environment, no-op
-func (d *DefaultImportsHandler) Wait() {}
+func (d *DefaultImportsHandler) Wait() Action { return ActionContinue }
 
 // utils
 func (d *DefaultImportsHandler) GetRootContextID() int32 { return 0 }
