@@ -26,7 +26,7 @@ import (
 	"sync/atomic"
 
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
-	"mosn.io/proxy-wasm-go-host/proxywasm/v1"
+	proxywasm "mosn.io/proxy-wasm-go-host/proxywasm/v1"
 	"mosn.io/proxy-wasm-go-host/wasmer"
 )
 
@@ -40,7 +40,7 @@ var instance common.WasmInstance
 // implement proxywasm.ImportsHandler.
 type importHandler struct {
 	reqHeader common.HeaderMap
-	v1.DefaultImportsHandler
+	proxywasm.DefaultImportsHandler
 }
 
 // override.
@@ -49,9 +49,9 @@ func (im *importHandler) GetHttpRequestHeader() common.HeaderMap {
 }
 
 // override.
-func (im *importHandler) Log(level v1.LogLevel, msg string) v1.WasmResult {
+func (im *importHandler) Log(level proxywasm.LogLevel, msg string) proxywasm.WasmResult {
 	fmt.Println(msg)
-	return v1.WasmResultOk
+	return proxywasm.WasmResultOk
 }
 
 // serve HTTP req
@@ -65,7 +65,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	instance := getWasmInstance()
 
 	// create abi context
-	ctx := &v1.ABIContext{
+	ctx := &proxywasm.ABIContext{
 		Imports:  &importHandler{reqHeader: &myHeaderMap{r.Header}},
 		Instance: instance,
 	}
@@ -115,7 +115,7 @@ func getWasmInstance() common.WasmInstance {
 		instance = wasmer.NewWasmerInstanceFromFile(filepath.Join(pwd, "data/http.wasm"))
 
 		// register ABI imports into the wasm vm instance
-		v1.RegisterImports(instance)
+		proxywasm.RegisterImports(instance)
 
 		// start the wasm vm instance
 		_ = instance.Start()
