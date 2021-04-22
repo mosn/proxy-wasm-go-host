@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-package proxywasm
+package v1
 
-import "mosn.io/proxy-wasm-go-host/common"
+import "mosn.io/proxy-wasm-go-host/proxywasm/common"
 
 func copyIntoInstance(instance common.WasmInstance, value string, retPtr int32, retSize int32) WasmResult {
 	addr, err := instance.Malloc(int32(len(value)))

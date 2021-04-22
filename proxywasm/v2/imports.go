@@ -17,7 +17,7 @@
 
 package v2
 
-import "mosn.io/proxy-wasm-go-host/common"
+import "mosn.io/proxy-wasm-go-host/proxywasm/common"
 
 func RegisterImports(instance common.WasmInstance) {
 	_ = instance.RegisterFunc("env", "proxy_log", ProxyLog)

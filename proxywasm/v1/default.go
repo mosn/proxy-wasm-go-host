@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package proxywasm
+package v1
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"mosn.io/proxy-wasm-go-host/common"
+	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 
 type DefaultImportsHandler struct{}

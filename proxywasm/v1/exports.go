@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package proxywasm
+package v1
 
 func (a *ABIContext) CallWasmFunction(funcName string, args ...interface{}) (interface{}, error) {
 	ff, err := a.Instance.GetExportsFunc(funcName)
