@@ -21,7 +21,7 @@ import "mosn.io/proxy-wasm-go-host/common"
 
 type DefaultImportsHandler struct{}
 
-func (d *DefaultImportsHandler) Wait() {}
+func (d *DefaultImportsHandler) Wait() Action { return ActionContinue }
 
 func (d *DefaultImportsHandler) Log(logLevel LogLevel, msg string) Result { return ResultUnimplemented }
 
