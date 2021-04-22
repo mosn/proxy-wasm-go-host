@@ -115,7 +115,7 @@ func ProxySetHeaderMapPairs(instance common.WasmInstance, mapType int32, ptr int
 		return WasmResultInvalidMemoryAccess.Int32()
 	}
 
-	newMap := DecodeMap(newMapContent)
+	newMap := common.DecodeMap(newMapContent)
 
 	for k, v := range newMap {
 		headerMap.Set(k, v)
