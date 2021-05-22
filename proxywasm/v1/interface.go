@@ -120,7 +120,7 @@ type ImportsHandler interface {
 	GetGrpcReceiveTrailerMetaData() common.HeaderMap
 
 	// foreign
-	CallForeignFunction(funcName string, param string) (string, WasmResult)
+	CallForeignFunction(funcName string, param []byte) ([]byte, WasmResult)
 	GetFuncCallData() common.IoBuffer
 
 	// shared

@@ -43,6 +43,30 @@ func copyIntoInstance(instance common.WasmInstance, value string, retPtr int32, 
 	return WasmResultOk
 }
 
+func copyBytesIntoInstance(instance common.WasmInstance, value []byte, retPtr int32, retSize int32) WasmResult {
+	addr, err := instance.Malloc(int32(len(value)))
+	if err != nil {
+		return WasmResultInvalidMemoryAccess
+	}
+
+	err = instance.PutMemory(addr, uint64(len(value)), value)
+	if err != nil {
+		return WasmResultInvalidMemoryAccess
+	}
+
+	err = instance.PutUint32(uint64(retPtr), uint32(addr))
+	if err != nil {
+		return WasmResultInvalidMemoryAccess
+	}
+
+	err = instance.PutUint32(uint64(retSize), uint32(len(value)))
+	if err != nil {
+		return WasmResultInvalidMemoryAccess
+	}
+
+	return WasmResultOk
+}
+
 func getContextHandler(instance common.WasmInstance) ContextHandler {
 	if v := instance.GetData(); v != nil {
 		if im, ok := v.(ContextHandler); ok {
