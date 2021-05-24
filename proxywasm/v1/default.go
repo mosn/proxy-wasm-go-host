@@ -128,8 +128,8 @@ func (d *DefaultImportsHandler) GetGrpcReceiveTrailerMetaData() common.HeaderMap
 
 // foreign
 
-func (d *DefaultImportsHandler) CallForeignFunction(funcName string, param string) (string, WasmResult) {
-	return "", WasmResultUnimplemented
+func (d *DefaultImportsHandler) CallForeignFunction(funcName string, param []byte) ([]byte, WasmResult) {
+	return nil, WasmResultUnimplemented
 }
 
 func (d *DefaultImportsHandler) GetFuncCallData() common.IoBuffer { return nil }

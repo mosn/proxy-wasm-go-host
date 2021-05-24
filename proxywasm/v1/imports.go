@@ -138,10 +138,10 @@ func ProxyCallForeignFunction(instance common.WasmInstance, funcNamePtr int32, f
 
 	ctx := getImportHandler(instance)
 
-	ret, res := ctx.CallForeignFunction(string(funcName), string(param))
+	ret, res := ctx.CallForeignFunction(string(funcName), param)
 	if res != WasmResultOk {
 		return res.Int32()
 	}
 
-	return copyIntoInstance(instance, ret, returnData, returnSize).Int32()
+	return copyBytesIntoInstance(instance, ret, returnData, returnSize).Int32()
 }
