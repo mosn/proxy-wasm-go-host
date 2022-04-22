@@ -28,7 +28,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.14.13
+        go-version: 1.14.15
 
     - name: Build
       run: go build -v ./proxywasm/...
@@ -42,7 +42,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.14.13
+        go-version: 1.14.15
 
     - name: Test
       run: go test -v ./proxywasm/...
