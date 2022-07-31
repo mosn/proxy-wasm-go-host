@@ -62,24 +62,25 @@ const (
 type MapType int32
 
 const (
-	MapTypeHttpRequestHeaders       MapType = 1
-	MapTypeHttpRequestTrailers      MapType = 2
-	MapTypeHttpRequestMetadata      MapType = 3
-	MapTypeHttpResponseHeaders      MapType = 4
-	MapTypeHttpResponseTrailers     MapType = 5
-	MapTypeHttpResponseMetadata     MapType = 6
-	MapTypeHttpCallResponseHeaders  MapType = 7
-	MapTypeHttpCallResponseTrailers MapType = 8
-	MapTypeHttpCallResponseMetadata MapType = 9
+	MapTypeHttpRequestHeaders       MapType = 0
+	MapTypeHttpRequestTrailers      MapType = 1
+	MapTypeHttpRequestMetadata      MapType = 2
+	MapTypeHttpResponseHeaders      MapType = 3
+	MapTypeHttpResponseTrailers     MapType = 4
+	MapTypeHttpResponseMetadata     MapType = 5
+	MapTypeHttpCallResponseHeaders  MapType = 6
+	MapTypeHttpCallResponseTrailers MapType = 7
+	MapTypeHttpCallResponseMetadata MapType = 8
 )
 
 type BufferType int32
 
 const (
-	BufferTypeVmConfiguration         BufferType = 1
-	BufferTypePluginConfiguration     BufferType = 2
-	BufferTypeDownstreamData          BufferType = 3
-	BufferTypeUpstreamData            BufferType = 4
+	BufferTypeVmConfiguration         BufferType = 0
+	BufferTypePluginConfiguration     BufferType = 1
+	BufferTypeDownstreamData          BufferType = 2
+	BufferTypeUpstreamData            BufferType = 3
+	BufferTypeHttpCallResponseBody    BufferType = 4
 	BufferTypeHttpRequestBody         BufferType = 5
 	BufferTypeHttpResponseBody        BufferType = 6
 	BufferTypeHttpCalloutResponseBody BufferType = 7
@@ -106,11 +107,11 @@ const (
 type LogLevel int32
 
 const (
-	LogLevelTrace   LogLevel = 1
-	LogLevelDebug   LogLevel = 2
-	LogLevelInfo    LogLevel = 3
-	LogLevelWarning LogLevel = 4
-	LogLevelError   LogLevel = 5
+	LogLevelTrace LogLevel = iota
+	LogLevelDebug
+	LogLevelInfo
+	LogLevelWarning
+	LogLevelError
 )
 
 type CloseSourceType int32

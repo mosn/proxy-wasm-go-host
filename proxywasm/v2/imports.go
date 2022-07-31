@@ -32,8 +32,12 @@ func RegisterImports(instance common.WasmInstance) {
 	_ = instance.RegisterFunc("env", "proxy_resume_http_stream", ProxyResumeHttpStream)
 	_ = instance.RegisterFunc("env", "proxy_close_http_stream", ProxyCloseHttpStream)
 
+	_ = instance.RegisterFunc("env", "proxy_get_buffer_bytes", ProxyGetBuffer)
+
 	_ = instance.RegisterFunc("env", "proxy_get_buffer", ProxyGetBuffer)
 	_ = instance.RegisterFunc("env", "proxy_set_buffer", ProxySetBuffer)
+
+	_ = instance.RegisterFunc("env", "proxy_get_header_map_pairs", ProxyGetHeaderMapPairs)
 
 	_ = instance.RegisterFunc("env", "proxy_get_map_values", ProxyGetMapValues)
 	_ = instance.RegisterFunc("env", "proxy_set_map_values", ProxySetMapValues)
@@ -59,6 +63,7 @@ func RegisterImports(instance common.WasmInstance) {
 	_ = instance.RegisterFunc("env", "proxy_increment_metric_value", ProxyIncrementMetricValue)
 	_ = instance.RegisterFunc("env", "proxy_delete_metric", ProxyDeleteMetric)
 
+	_ = instance.RegisterFunc("env", "proxy_http_call", ProxyDispatchHttpCall)
 	_ = instance.RegisterFunc("env", "proxy_dispatch_http_call", ProxyDispatchHttpCall)
 
 	_ = instance.RegisterFunc("env", "proxy_dispatch_grpc_call", ProxyDispatchGrpcCall)
@@ -70,7 +75,7 @@ func RegisterImports(instance common.WasmInstance) {
 	_ = instance.RegisterFunc("env", "proxy_call_custom_function", ProxyCallCustomFunction)
 }
 
-func ProxyLog(instance common.WasmInstance, logLevel LogLevel, messageData int32, messageSize int32) Result {
+func ProxyLog(instance common.WasmInstance, logLevel int32, messageData int32, messageSize int32) Result {
 	msg, err := instance.GetMemory(uint64(messageData), uint64(messageSize))
 	if err != nil {
 		return ResultInvalidMemoryAccess
@@ -78,7 +83,7 @@ func ProxyLog(instance common.WasmInstance, logLevel LogLevel, messageData int32
 
 	callback := getImportHandler(instance)
 
-	return callback.Log(logLevel, string(msg))
+	return callback.Log(LogLevel(logLevel), string(msg))
 }
 
 func ProxySetEffectiveContext(instance common.WasmInstance, contextID int32) Result {
@@ -191,14 +196,16 @@ func GetBuffer(instance common.WasmInstance, bufferType BufferType) common.IoBuf
 		return im.GetPluginConfig()
 	case BufferTypeVmConfiguration:
 		return im.GetVmConfig()
+	case BufferTypeHttpCallResponseBody:
+		return im.GetHttpCalloutResponseBody()
 	default:
 		return im.GetCustomBuffer(bufferType)
 	}
 }
 
-func ProxyGetBuffer(instance common.WasmInstance, bufferType BufferType, offset int32, maxSize int32,
+func ProxyGetBuffer(instance common.WasmInstance, bufferType int32, offset int32, maxSize int32,
 	returnBufferData int32, returnBufferSize int32) Result {
-	buf := GetBuffer(instance, bufferType)
+	buf := GetBuffer(instance, BufferType(bufferType))
 	if buf == nil {
 		return ResultBadArgument
 	}
@@ -328,6 +335,64 @@ func copyMapIntoInstance(m common.HeaderMap, instance common.WasmInstance, retur
 	}
 
 	return ResultOk
+}
+
+func ProxyGetHeaderMapPairs(instance common.WasmInstance, mapType int32, returnDataPtr int32, returnDataSize int32) int32 {
+	header := GetMap(instance, MapType(mapType))
+	if header == nil {
+		return int32(ResultNotFound)
+	}
+
+	cloneMap := make(map[string]string)
+	totalBytesLen := 4
+	header.Range(func(key, value string) bool {
+		cloneMap[key] = value
+		totalBytesLen += 4 + 4                         // keyLen + valueLen
+		totalBytesLen += len(key) + 1 + len(value) + 1 // key + \0 + value + \0
+		return true
+	})
+
+	addr, err := instance.Malloc(int32(totalBytesLen))
+	if err != nil {
+		return int32(ResultInvalidMemoryAccess)
+	}
+
+	err = instance.PutUint32(addr, uint32(len(cloneMap)))
+	if err != nil {
+		return int32(ResultInvalidMemoryAccess)
+	}
+
+	lenPtr := addr + 4
+	dataPtr := lenPtr + uint64(8*len(cloneMap))
+
+	for k, v := range cloneMap {
+		_ = instance.PutUint32(lenPtr, uint32(len(k)))
+		lenPtr += 4
+		_ = instance.PutUint32(lenPtr, uint32(len(v)))
+		lenPtr += 4
+
+		_ = instance.PutMemory(dataPtr, uint64(len(k)), []byte(k))
+		dataPtr += uint64(len(k))
+		_ = instance.PutByte(dataPtr, 0)
+		dataPtr++
+
+		_ = instance.PutMemory(dataPtr, uint64(len(v)), []byte(v))
+		dataPtr += uint64(len(v))
+		_ = instance.PutByte(dataPtr, 0)
+		dataPtr++
+	}
+
+	err = instance.PutUint32(uint64(returnDataPtr), uint32(addr))
+	if err != nil {
+		return int32(ResultInvalidMemoryAccess)
+	}
+
+	err = instance.PutUint32(uint64(returnDataSize), uint32(totalBytesLen))
+	if err != nil {
+		return int32(ResultInvalidMemoryAccess)
+	}
+
+	return int32(ResultOk)
 }
 
 func ProxyGetMapValues(instance common.WasmInstance, mapType MapType, keysData int32, keysSize int32,

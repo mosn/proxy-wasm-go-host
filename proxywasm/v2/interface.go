@@ -142,7 +142,7 @@ type Exports interface {
 	ProxyOnHttpResponseTrailers(streamID int32, numTrailers int32, endOfStream int32) (Action, error)
 	ProxyOnHttpResponseMetadata(streamID int32, numElements int32) (Action, error)
 
-	ProxyOnHttpCallResponse(calloutID int32, numHeaders int32, bodySize int32, numTrailers int32) error
+	ProxyOnHttpCallResponse(pluginContextID int32, calloutID int32, numHeaders int32, bodySize int32, numTrailers int32) error
 
 	// queue
 	ProxyOnQueueReady(queueID int32) error
