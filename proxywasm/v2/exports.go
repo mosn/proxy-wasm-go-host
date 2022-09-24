@@ -123,24 +123,24 @@ func (a *ABIContext) ProxyOnRequestHeaders(streamID int32, numHeaders int32, end
 	return action, nil
 }
 
-func (a *ABIContext) ProxyOnHttpRequestBody(streamID int32, bodySize int32, endOfStream int32) (Action, error) {
-	_, action, err := a.CallWasmFunction("proxy_on_http_request_body", streamID, bodySize, endOfStream)
+func (a *ABIContext) ProxyOnRequestBody(streamID int32, bodySize int32, endOfStream int32) (Action, error) {
+	_, action, err := a.CallWasmFunction("proxy_on_request_body", streamID, bodySize, endOfStream)
 	if err != nil {
 		return ActionPause, err
 	}
 	return action, nil
 }
 
-func (a *ABIContext) ProxyOnHttpRequestTrailers(streamID int32, numTrailers int32, endOfStream int32) (Action, error) {
-	_, action, err := a.CallWasmFunction("proxy_on_http_request_trailers", streamID, numTrailers, endOfStream)
+func (a *ABIContext) ProxyOnRequestTrailers(streamID int32, numTrailers int32, endOfStream int32) (Action, error) {
+	_, action, err := a.CallWasmFunction("proxy_on_request_trailers", streamID, numTrailers, endOfStream)
 	if err != nil {
 		return ActionPause, err
 	}
 	return action, nil
 }
 
-func (a *ABIContext) ProxyOnHttpRequestMetadata(streamID int32, numElements int32) (Action, error) {
-	_, action, err := a.CallWasmFunction("proxy_on_http_request_metadata", streamID, numElements)
+func (a *ABIContext) ProxyOnRequestMetadata(streamID int32, numElements int32) (Action, error) {
+	_, action, err := a.CallWasmFunction("proxy_on_request_metadata", streamID, numElements)
 	if err != nil {
 		return ActionPause, err
 	}
@@ -155,24 +155,24 @@ func (a *ABIContext) ProxyOnResponseHeaders(streamID int32, numHeaders int32, en
 	return action, nil
 }
 
-func (a *ABIContext) ProxyOnHttpResponseBody(streamID int32, bodySize int32, endOfStream int32) (Action, error) {
-	_, action, err := a.CallWasmFunction("proxy_on_http_response_body", streamID, bodySize, endOfStream)
+func (a *ABIContext) ProxyOnResponseBody(streamID int32, bodySize int32, endOfStream int32) (Action, error) {
+	_, action, err := a.CallWasmFunction("proxy_on_response_body", streamID, bodySize, endOfStream)
 	if err != nil {
 		return ActionPause, err
 	}
 	return action, nil
 }
 
-func (a *ABIContext) ProxyOnHttpResponseTrailers(streamID int32, numTrailers int32, endOfStream int32) (Action, error) {
-	_, action, err := a.CallWasmFunction("proxy_on_http_response_trailers", streamID, numTrailers, endOfStream)
+func (a *ABIContext) ProxyOnResponseTrailers(streamID int32, numTrailers int32, endOfStream int32) (Action, error) {
+	_, action, err := a.CallWasmFunction("proxy_on_response_trailers", streamID, numTrailers, endOfStream)
 	if err != nil {
 		return ActionPause, err
 	}
 	return action, nil
 }
 
-func (a *ABIContext) ProxyOnHttpResponseMetadata(streamID int32, numElements int32) (Action, error) {
-	_, action, err := a.CallWasmFunction("proxy_on_http_response_metadata", streamID, numElements)
+func (a *ABIContext) ProxyOnResponseMetadata(streamID int32, numElements int32) (Action, error) {
+	_, action, err := a.CallWasmFunction("proxy_on_response_metadata", streamID, numElements)
 	if err != nil {
 		return ActionPause, err
 	}

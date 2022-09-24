@@ -133,14 +133,14 @@ type Exports interface {
 
 	// http
 	ProxyOnRequestHeaders(streamID int32, numHeaders int32, endOfStream int32) (Action, error)
-	ProxyOnHttpRequestBody(streamID int32, bodySize int32, endOfStream int32) (Action, error)
-	ProxyOnHttpRequestTrailers(streamID int32, numTrailers int32, endOfStream int32) (Action, error)
-	ProxyOnHttpRequestMetadata(streamID int32, numElements int32) (Action, error)
+	ProxyOnRequestBody(streamID int32, bodySize int32, endOfStream int32) (Action, error)
+	ProxyOnRequestTrailers(streamID int32, numTrailers int32, endOfStream int32) (Action, error)
+	ProxyOnRequestMetadata(streamID int32, numElements int32) (Action, error)
 
 	ProxyOnResponseHeaders(streamID int32, numHeaders int32, endOfStream int32) (Action, error)
-	ProxyOnHttpResponseBody(streamID int32, bodySize int32, endOfStream int32) (Action, error)
-	ProxyOnHttpResponseTrailers(streamID int32, numTrailers int32, endOfStream int32) (Action, error)
-	ProxyOnHttpResponseMetadata(streamID int32, numElements int32) (Action, error)
+	ProxyOnResponseBody(streamID int32, bodySize int32, endOfStream int32) (Action, error)
+	ProxyOnResponseTrailers(streamID int32, numTrailers int32, endOfStream int32) (Action, error)
+	ProxyOnResponseMetadata(streamID int32, numElements int32) (Action, error)
 
 	ProxyOnHttpCallResponse(pluginContextID int32, calloutID int32, numHeaders int32, bodySize int32, numTrailers int32) error
 
