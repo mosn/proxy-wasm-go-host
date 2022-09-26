@@ -43,12 +43,12 @@ func (a *ABIContext) ProxyOnMemoryAllocate(memorySize int32) (int32, error) {
 	return res.(int32), nil
 }
 
-func (a *ABIContext) ProxyOnContextCreate(contextID int32, parentContextID int32, contextType ContextType) (int32, error) {
+func (a *ABIContext) ProxyOnContextCreate(contextID int32, parentContextID int32, contextType ContextType) error {
 	_, _, err := a.CallWasmFunction("proxy_on_context_create", contextID, parentContextID)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	return 0, nil
+	return nil
 }
 
 func (a *ABIContext) ProxyOnDone(contextID int32) (int32, error) {

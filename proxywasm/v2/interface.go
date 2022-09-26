@@ -117,7 +117,7 @@ type Exports interface {
 	ProxyOnMemoryAllocate(memorySize int32) (int32, error)
 
 	// context
-	ProxyOnContextCreate(contextID int32, parentContextID int32, contextType ContextType) (int32, error)
+	ProxyOnContextCreate(contextID int32, parentContextID int32, contextType ContextType) error
 	ProxyOnDone(contextID int32) (int32, error)
 
 	// configuration
