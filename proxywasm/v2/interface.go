@@ -117,12 +117,12 @@ type Exports interface {
 	ProxyOnMemoryAllocate(memorySize int32) (int32, error)
 
 	// context
-	ProxyOnContextCreate(contextID int32, parentContextID int32, contextType ContextType) (int32, error)
-	ProxyOnContextFinalize(contextID int32) (int32, error)
+	ProxyOnContextCreate(contextID int32, parentContextID int32, contextType ContextType) error
+	ProxyOnDone(contextID int32) (int32, error)
 
 	// configuration
 	ProxyOnVmStart(vmID int32, vmConfigurationSize int32) (int32, error)
-	ProxyOnPluginStart(pluginID int32, pluginConfigurationSize int32) (int32, error)
+	ProxyOnConfigure(pluginID int32, pluginConfigurationSize int32) (int32, error)
 
 	// l4
 	ProxyOnNewConnection(streamID int32) (Action, error)
@@ -132,17 +132,17 @@ type Exports interface {
 	ProxyOnUpstreamClose(streamID int32, closeSource CloseSourceType) error
 
 	// http
-	ProxyOnHttpRequestHeaders(streamID int32, numHeaders int32, endOfStream int32) (Action, error)
-	ProxyOnHttpRequestBody(streamID int32, bodySize int32, endOfStream int32) (Action, error)
-	ProxyOnHttpRequestTrailers(streamID int32, numTrailers int32, endOfStream int32) (Action, error)
-	ProxyOnHttpRequestMetadata(streamID int32, numElements int32) (Action, error)
+	ProxyOnRequestHeaders(streamID int32, numHeaders int32, endOfStream int32) (Action, error)
+	ProxyOnRequestBody(streamID int32, bodySize int32, endOfStream int32) (Action, error)
+	ProxyOnRequestTrailers(streamID int32, numTrailers int32, endOfStream int32) (Action, error)
+	ProxyOnRequestMetadata(streamID int32, numElements int32) (Action, error)
 
-	ProxyOnHttpResponseHeaders(streamID int32, numHeaders int32, endOfStream int32) (Action, error)
-	ProxyOnHttpResponseBody(streamID int32, bodySize int32, endOfStream int32) (Action, error)
-	ProxyOnHttpResponseTrailers(streamID int32, numTrailers int32, endOfStream int32) (Action, error)
-	ProxyOnHttpResponseMetadata(streamID int32, numElements int32) (Action, error)
+	ProxyOnResponseHeaders(streamID int32, numHeaders int32, endOfStream int32) (Action, error)
+	ProxyOnResponseBody(streamID int32, bodySize int32, endOfStream int32) (Action, error)
+	ProxyOnResponseTrailers(streamID int32, numTrailers int32, endOfStream int32) (Action, error)
+	ProxyOnResponseMetadata(streamID int32, numElements int32) (Action, error)
 
-	ProxyOnHttpCallResponse(calloutID int32, numHeaders int32, bodySize int32, numTrailers int32) error
+	ProxyOnHttpCallResponse(pluginContextID int32, calloutID int32, numHeaders int32, bodySize int32, numTrailers int32) error
 
 	// queue
 	ProxyOnQueueReady(queueID int32) error
