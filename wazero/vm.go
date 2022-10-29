@@ -15,26 +15,42 @@
  * limitations under the License.
  */
 
-package wasmer
+package wazero
 
 import (
-	"os"
-	"path/filepath"
-
+	"context"
+	wazero "github.com/tetratelabs/wazero"
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 
-func NewWasmerInstanceFromFile(path string) common.WasmInstance {
-	bytes, err := os.ReadFile(filepath.Clean(path))
+type VM struct {
+	engine wazero.Runtime
+}
+
+func NewVM() common.WasmVM {
+	vm := &VM{}
+	vm.Init()
+
+	return vm
+}
+
+func (w *VM) Name() string {
+	return "wazero"
+}
+
+func (w *VM) Init() {
+	w.engine = wazero.NewRuntime(context.Background())
+}
+
+func (w *VM) NewModule(wasmBytes []byte) common.WasmModule {
+	if len(wasmBytes) == 0 {
+		return nil
+	}
+
+	m, err := w.engine.CompileModule(context.Background(), wasmBytes)
 	if err != nil {
 		return nil
 	}
 
-	vm := NewWasmerVM()
-
-	module := vm.NewModule(bytes)
-
-	instance := module.NewInstance()
-
-	return instance
+	return NewModule(w, m, wasmBytes)
 }
