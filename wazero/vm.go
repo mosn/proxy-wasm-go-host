@@ -19,7 +19,9 @@ package wazero
 
 import (
 	"context"
+
 	wazero "github.com/tetratelabs/wazero"
+
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 

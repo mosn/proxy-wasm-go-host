@@ -34,6 +34,9 @@ jobs:
       - name: Build
         run: go build -v ./proxywasm/...
 
+      - name: Build (wasmer)
+        run: go build -v ./proxywasm/... -tags='wasmer'
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -48,3 +51,6 @@ jobs:
 
       - name: Test
         run: go test -v ./proxywasm/...
+
+      - name: Test (wasmer)
+        run: go test -v ./proxywasm/... -tags='wasmer'

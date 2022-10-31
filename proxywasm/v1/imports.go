@@ -124,8 +124,8 @@ func ProxyDone(instance common.WasmInstance) int32 {
 }
 
 func ProxyCallForeignFunction(instance common.WasmInstance, funcNamePtr int32, funcNameSize int32,
-	paramPtr int32, paramSize int32, returnData int32, returnSize int32) int32 {
-
+	paramPtr int32, paramSize int32, returnData int32, returnSize int32,
+) int32 {
 	funcName, err := instance.GetMemory(uint64(funcNamePtr), uint64(funcNameSize))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()

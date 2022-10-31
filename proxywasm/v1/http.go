@@ -34,8 +34,8 @@ func ProxyResumeHttpResponse(instance common.WasmInstance) int32 {
 }
 
 func ProxySendHttpResponse(instance common.WasmInstance, respCode int32, respCodeDetailPtr int32, respCodeDetailSize int32,
-	respBodyPtr int32, respBodySize int32, additionalHeaderMapDataPtr int32, additionalHeaderSize int32, grpcStatus int32) int32 {
-
+	respBodyPtr int32, respBodySize int32, additionalHeaderMapDataPtr int32, additionalHeaderSize int32, grpcStatus int32,
+) int32 {
 	respCodeDetail, err := instance.GetMemory(uint64(respCodeDetailPtr), uint64(respCodeDetailSize))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()
@@ -63,8 +63,8 @@ func ProxySendHttpResponse(instance common.WasmInstance, respCode int32, respCod
 
 func ProxyHttpCall(instance common.WasmInstance, uriPtr int32, uriSize int32,
 	headerPairsPtr int32, headerPairsSize int32, bodyPtr int32, bodySize int32, trailerPairsPtr int32, trailerPairsSize int32,
-	timeoutMilliseconds int32, calloutIDPtr int32) int32 {
-
+	timeoutMilliseconds int32, calloutIDPtr int32,
+) int32 {
 	url, err := instance.GetMemory(uint64(uriPtr), uint64(uriSize))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()

@@ -21,12 +21,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/tetratelabs/wazero/api"
-	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 	"sync"
 	"sync/atomic"
 
+	"github.com/tetratelabs/wazero/api"
+	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
+
 	wazero "github.com/tetratelabs/wazero"
+
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 
