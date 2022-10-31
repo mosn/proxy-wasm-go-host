@@ -32,10 +32,10 @@ jobs:
           cache: true
 
       - name: Build
-        run: go build -v ./proxywasm/...
+        run: go build -v ./...
 
       - name: Build (wasmer)
-        run: go build -v ./proxywasm/... -tags='wasmer'
+        run: go build -tags='wasmer' -v ./...
 
   test:
     runs-on: ubuntu-latest
@@ -50,7 +50,7 @@ jobs:
           cache: true
 
       - name: Test
-        run: go test -v ./proxywasm/...
+        run: go test -v ./...
 
       - name: Test (wasmer)
-        run: go test -v ./proxywasm/... -tags='wasmer'
+        run: go test -v ./... -tags='wasmer'
