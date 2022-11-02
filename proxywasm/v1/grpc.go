@@ -22,8 +22,8 @@ import (
 )
 
 func ProxyOpenGrpcStream(instance common.WasmInstance, grpcServiceData int32, grpcServiceSize int32,
-	serviceNameData int32, serviceNameSize int32, methodData int32, methodSize int32, returnCalloutID int32) int32 {
-
+	serviceNameData int32, serviceNameSize int32, methodData int32, methodSize int32, returnCalloutID int32,
+) int32 {
 	grpcService, err := instance.GetMemory(uint64(grpcServiceData), uint64(grpcServiceSize))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()
@@ -79,8 +79,8 @@ func ProxyGrpcCall(instance common.WasmInstance, grpcServiceData int32, grpcServ
 	serviceNameData int32, serviceNameSize int32,
 	methodData int32, methodSize int32,
 	grpcMessageData int32, grpcMessageSize int32,
-	timeoutMilliseconds int32, returnCalloutID int32) int32 {
-
+	timeoutMilliseconds int32, returnCalloutID int32,
+) int32 {
 	grpcService, err := instance.GetMemory(uint64(grpcServiceData), uint64(grpcServiceSize))
 	if err != nil {
 		return WasmResultInvalidMemoryAccess.Int32()

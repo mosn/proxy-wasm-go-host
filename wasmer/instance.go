@@ -26,6 +26,7 @@ import (
 	"sync/atomic"
 
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
+
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 
@@ -60,7 +61,7 @@ type Instance struct {
 
 type InstanceOptions func(instance *Instance)
 
-func NewWasmerInstance(vm *VM, module *Module, options ...InstanceOptions) *Instance {
+func NewInstance(vm *VM, module *Module, options ...InstanceOptions) *Instance {
 	ins := &Instance{
 		vm:     vm,
 		module: module,

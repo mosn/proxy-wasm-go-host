@@ -19,6 +19,7 @@ package wasmer
 
 import (
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
+
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 
@@ -27,7 +28,7 @@ type VM struct {
 	store  *wasmerGo.Store
 }
 
-func NewWasmerVM() common.WasmVM {
+func NewVM() common.WasmVM {
 	vm := &VM{}
 	vm.Init()
 
@@ -53,5 +54,5 @@ func (w *VM) NewModule(wasmBytes []byte) common.WasmModule {
 		return nil
 	}
 
-	return NewWasmerModule(w, m, wasmBytes)
+	return NewModule(w, m, wasmBytes)
 }

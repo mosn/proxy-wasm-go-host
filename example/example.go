@@ -18,10 +18,10 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
+	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"sync"
 	"sync/atomic"
 
@@ -30,14 +30,21 @@ import (
 	"mosn.io/proxy-wasm-go-host/wasmer"
 )
 
-var contextIDGenerator int32
-var rootContextID int32
+//go:embed data/http.wasm
+var exampleWasm []byte
 
-var lock sync.Mutex
-var once sync.Once
-var instance common.WasmInstance
+var (
+	contextIDGenerator int32
+	rootContextID      int32
+)
 
-// implement proxywasm.ImportsHandler.
+var (
+	lock     sync.Mutex
+	once     sync.Once
+	instance common.WasmInstance
+)
+
+// implement v1.ImportsHandler.
 type importHandler struct {
 	reqHeader common.HeaderMap
 	proxywasm.DefaultImportsHandler
@@ -77,7 +84,9 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// according to ABI, we should create a root context id before any operations
 	once.Do(func() {
-		_ = ctx.GetExports().ProxyOnContextCreate(rootContextID, 0)
+		if err := ctx.GetExports().ProxyOnContextCreate(rootContextID, 0); err != nil {
+			log.Panicln(err)
+		}
 	})
 
 	// lock wasm vm instance for exclusive ownership
@@ -85,13 +94,19 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer instance.Unlock()
 
 	// create wasm-side context id for current http req
-	_ = ctx.GetExports().ProxyOnContextCreate(contextID, rootContextID)
+	if err := ctx.GetExports().ProxyOnContextCreate(contextID, rootContextID); err != nil {
+		log.Panicln(err)
+	}
 
 	// call wasm-side on_request_header
-	_, _ = ctx.GetExports().ProxyOnRequestHeaders(contextID, int32(len(r.Header)), 1)
+	if _, err := ctx.GetExports().ProxyOnRequestHeaders(contextID, int32(len(r.Header)), 1); err != nil {
+		log.Panicln(err)
+	}
 
 	// delete wasm-side context id to prevent memory leak
-	_ = ctx.GetExports().ProxyOnDelete(contextID)
+	if err := ctx.GetExports().ProxyOnDelete(contextID); err != nil {
+		log.Panicln(err)
+	}
 
 	// reply with ok
 	w.WriteHeader(http.StatusOK)
@@ -103,7 +118,9 @@ func main() {
 
 	// serve http
 	http.HandleFunc("/", ServeHTTP)
-	_ = http.ListenAndServe("127.0.0.1:2045", nil)
+	if err := http.ListenAndServe("127.0.0.1:2045", nil); err != nil {
+		log.Panicln(err)
+	}
 }
 
 func getWasmInstance() common.WasmInstance {
@@ -111,15 +128,42 @@ func getWasmInstance() common.WasmInstance {
 	defer lock.Unlock()
 
 	if instance == nil {
-		pwd, _ := os.Getwd()
-		instance = wasmer.NewWasmerInstanceFromFile(filepath.Join(pwd, "data/http.wasm"))
+		instance = wasmer.NewInstanceFromBinary(exampleWasm)
 
 		// register ABI imports into the wasm vm instance
 		proxywasm.RegisterImports(instance)
 
 		// start the wasm vm instance
-		_ = instance.Start()
+		if err := instance.Start(); err != nil {
+			log.Panicln(err)
+		}
 	}
 
 	return instance
 }
+
+// wrapper for http.Header, convert Header to api.HeaderMap.
+type myHeaderMap struct {
+	realMap http.Header
+}
+
+func (m *myHeaderMap) Get(key string) (string, bool) {
+	return m.realMap.Get(key), true
+}
+
+func (m *myHeaderMap) Set(key, value string) { panic("implemented") }
+
+func (m *myHeaderMap) Add(key, value string) { panic("implemented") }
+
+func (m *myHeaderMap) Del(key string) { panic("implemented") }
+
+func (m *myHeaderMap) Range(f func(key string, value string) bool) {
+	for k := range m.realMap {
+		v := m.realMap.Get(k)
+		f(k, v)
+	}
+}
+
+func (m *myHeaderMap) Clone() common.HeaderMap { panic("implemented") }
+
+func (m *myHeaderMap) ByteSize() uint64 { panic("implemented") }

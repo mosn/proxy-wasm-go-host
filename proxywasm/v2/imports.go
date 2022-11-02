@@ -130,7 +130,8 @@ func ProxyCloseStream(instance common.WasmInstance, streamType StreamType) Resul
 
 func ProxySendHttpResponse(instance common.WasmInstance, responseCode int32, responseCodeDetailsData int32, responseCodeDetailsSize int32,
 	responseBodyData int32, responseBodySize int32, additionalHeadersMapData int32, additionalHeadersSize int32,
-	grpcStatus int32) Result {
+	grpcStatus int32,
+) Result {
 	respCodeDetail, err := instance.GetMemory(uint64(responseCodeDetailsData), uint64(responseCodeDetailsSize))
 	if err != nil {
 		return ResultInvalidMemoryAccess
@@ -204,7 +205,8 @@ func GetBuffer(instance common.WasmInstance, bufferType BufferType) common.IoBuf
 }
 
 func ProxyGetBuffer(instance common.WasmInstance, bufferType int32, offset int32, maxSize int32,
-	returnBufferData int32, returnBufferSize int32) Result {
+	returnBufferData int32, returnBufferSize int32,
+) Result {
 	buf := GetBuffer(instance, BufferType(bufferType))
 	if buf == nil {
 		return ResultBadArgument
@@ -226,7 +228,8 @@ func ProxyGetBuffer(instance common.WasmInstance, bufferType int32, offset int32
 }
 
 func ProxySetBuffer(instance common.WasmInstance, bufferType BufferType, offset int32, size int32,
-	bufferData int32, bufferSize int32) Result {
+	bufferData int32, bufferSize int32,
+) Result {
 	buf := GetBuffer(instance, bufferType)
 	if buf == nil {
 		return ResultBadArgument
@@ -396,7 +399,8 @@ func ProxyGetHeaderMapPairs(instance common.WasmInstance, mapType int32, returnD
 }
 
 func ProxyGetMapValues(instance common.WasmInstance, mapType MapType, keysData int32, keysSize int32,
-	returnMapData int32, returnMapSize int32) Result {
+	returnMapData int32, returnMapSize int32,
+) Result {
 	m := GetMap(instance, mapType)
 	if m == nil {
 		return ResultNotFound
@@ -424,7 +428,8 @@ func ProxyGetMapValues(instance common.WasmInstance, mapType MapType, keysData i
 }
 
 func ProxySetMapValues(instance common.WasmInstance, mapType MapType, removeKeysData int32, removeKeysSize int32,
-	mapData int32, mapSize int32) Result {
+	mapData int32, mapSize int32,
+) Result {
 	m := GetMap(instance, mapType)
 	if m == nil {
 		return ResultNotFound
@@ -455,7 +460,8 @@ func ProxySetMapValues(instance common.WasmInstance, mapType MapType, removeKeys
 }
 
 func ProxyOpenSharedKvstore(instance common.WasmInstance, kvstoreNameData int32, kvstoreNameSize int32, createIfNotExist int32,
-	returnKvstoreID int32) Result {
+	returnKvstoreID int32,
+) Result {
 	kvstoreName, err := instance.GetMemory(uint64(kvstoreNameData), uint64(kvstoreNameSize))
 	if err != nil {
 		return ResultInvalidMemoryAccess
@@ -480,7 +486,8 @@ func ProxyOpenSharedKvstore(instance common.WasmInstance, kvstoreNameData int32,
 }
 
 func ProxyGetSharedKvstoreKeyValues(instance common.WasmInstance, kvstoreID int32, keyData int32, keySize int32,
-	returnValuesData int32, returnValuesSize int32, returnCas int32) Result {
+	returnValuesData int32, returnValuesSize int32, returnCas int32,
+) Result {
 	callback := getImportHandler(instance)
 
 	kvstore := callback.GetSharedKvstore(uint32(kvstoreID))
@@ -505,7 +512,8 @@ func ProxyGetSharedKvstoreKeyValues(instance common.WasmInstance, kvstoreID int3
 }
 
 func ProxySetSharedKvstoreKeyValues(instance common.WasmInstance, kvstoreID int32, keyData int32, keySize int32,
-	valuesData int32, valuesSize int32, cas int32) Result {
+	valuesData int32, valuesSize int32, cas int32,
+) Result {
 	callback := getImportHandler(instance)
 
 	kvstore := callback.GetSharedKvstore(uint32(kvstoreID))
@@ -535,7 +543,8 @@ func ProxySetSharedKvstoreKeyValues(instance common.WasmInstance, kvstoreID int3
 }
 
 func ProxyAddSharedKvstoreKeyValues(instance common.WasmInstance, kvstoreID int32, keyData int32, keySize int32,
-	valuesData int32, valuesSize int32, cas int32) Result {
+	valuesData int32, valuesSize int32, cas int32,
+) Result {
 	callback := getImportHandler(instance)
 
 	kvstore := callback.GetSharedKvstore(uint32(kvstoreID))
@@ -594,7 +603,8 @@ func ProxyDeleteSharedKvstore(instance common.WasmInstance, kvstoreID int32) Res
 }
 
 func ProxyOpenSharedQueue(instance common.WasmInstance, queueNameData int32, queueNameSize int32, createIfNotExist int32,
-	returnQueueID int32) Result {
+	returnQueueID int32,
+) Result {
 	queueName, err := instance.GetMemory(uint64(queueNameData), uint64(queueNameSize))
 	if err != nil {
 		return ResultInvalidMemoryAccess
@@ -667,7 +677,8 @@ func ProxyDeleteTimer(instance common.WasmInstance, timerID int32) Result {
 }
 
 func ProxyCreateMetric(instance common.WasmInstance, metricType MetricType,
-	metricNameData int32, metricNameSize int32, returnMetricID int32) Result {
+	metricNameData int32, metricNameSize int32, returnMetricID int32,
+) Result {
 	ctx := getImportHandler(instance)
 
 	name, err := instance.GetMemory(uint64(metricNameData), uint64(metricNameSize))
@@ -725,7 +736,8 @@ func ProxyDeleteMetric(instance common.WasmInstance, metricID int32) Result {
 
 func ProxyDispatchHttpCall(instance common.WasmInstance, upstreamNameData int32, upstreamNameSize int32, headersMapData int32, headersMapSize int32,
 	bodyData int32, bodySize int32, trailersMapData int32, trailersMapSize int32, timeoutMilliseconds int32,
-	returnCalloutID int32) Result {
+	returnCalloutID int32,
+) Result {
 	upstream, err := instance.GetMemory(uint64(upstreamNameData), uint64(upstreamNameSize))
 	if err != nil {
 		return ResultInvalidMemoryAccess
@@ -768,7 +780,8 @@ func ProxyDispatchHttpCall(instance common.WasmInstance, upstreamNameData int32,
 
 func ProxyDispatchGrpcCall(instance common.WasmInstance, upstreamNameData int32, upstreamNameSize int32, serviceNameData int32, serviceNameSize int32,
 	serviceMethodData int32, serviceMethodSize int32, initialMetadataMapData int32, initialMetadataMapSize int32,
-	grpcMessageData int32, grpcMessageSize int32, timeoutMilliseconds int32, returnCalloutID int32) Result {
+	grpcMessageData int32, grpcMessageSize int32, timeoutMilliseconds int32, returnCalloutID int32,
+) Result {
 	upstream, err := instance.GetMemory(uint64(upstreamNameData), uint64(upstreamNameSize))
 	if err != nil {
 		return ResultInvalidMemoryAccess
@@ -813,7 +826,8 @@ func ProxyDispatchGrpcCall(instance common.WasmInstance, upstreamNameData int32,
 
 func ProxyOpenGrpcStream(instance common.WasmInstance, upstreamNameData int32, upstreamNameSize int32, serviceNameData int32, serviceNameSize int32,
 	serviceMethodData int32, serviceMethodSize int32, initialMetadataMapData int32, initialMetadataMapSize int32,
-	returnCalloutID int32) Result {
+	returnCalloutID int32,
+) Result {
 	upstream, err := instance.GetMemory(uint64(upstreamNameData), uint64(upstreamNameSize))
 	if err != nil {
 		return ResultInvalidMemoryAccess
@@ -871,8 +885,8 @@ func ProxyCloseGrpcCall(instance common.WasmInstance, calloutID int32) Result {
 }
 
 func ProxyCallCustomFunction(instance common.WasmInstance, customFunctionID int32, parametersData int32, parametersSize int32,
-	returnResultsData int32, returnResultsSize int32) Result {
-
+	returnResultsData int32, returnResultsSize int32,
+) Result {
 	param, err := instance.GetMemory(uint64(parametersData), uint64(parametersSize))
 	if err != nil {
 		return ResultInvalidMemoryAccess
