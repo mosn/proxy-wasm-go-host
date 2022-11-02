@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"sync/atomic"
 
@@ -29,9 +30,6 @@ import (
 	proxywasm "mosn.io/proxy-wasm-go-host/proxywasm/v1"
 	"mosn.io/proxy-wasm-go-host/wasmer"
 )
-
-//go:embed data/http.wasm
-var exampleWasm []byte
 
 var (
 	contextIDGenerator int32
@@ -128,7 +126,11 @@ func getWasmInstance() common.WasmInstance {
 	defer lock.Unlock()
 
 	if instance == nil {
-		instance = wasmer.NewInstanceFromBinary(exampleWasm)
+		wasmBytes, err := os.ReadFile("data/http.wasm")
+		if err != nil {
+			log.Panicln(err)
+		}
+		instance = wasmer.NewInstanceFromBinary(wasmBytes)
 
 		// register ABI imports into the wasm vm instance
 		proxywasm.RegisterImports(instance)

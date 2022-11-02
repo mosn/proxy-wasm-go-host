@@ -18,8 +18,19 @@
 package wasmer
 
 import (
+	"os"
+	"path/filepath"
+
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
+
+func NewWasmerInstanceFromFile(path string) common.WasmInstance {
+	wasmBytes, err := os.ReadFile(filepath.Clean(path))
+	if err != nil {
+		return nil
+	}
+	return NewInstanceFromBinary(wasmBytes)
+}
 
 func NewInstanceFromBinary(wasmBytes []byte) common.WasmInstance {
 	vm := NewVM()
