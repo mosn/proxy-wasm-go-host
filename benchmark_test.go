@@ -18,7 +18,8 @@
 package proxy_wasm_go_host
 
 import (
-	_ "embed"
+	"log"
+	"os"
 	"testing"
 
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
@@ -26,8 +27,13 @@ import (
 	"mosn.io/proxy-wasm-go-host/wasmer"
 )
 
-//go:embed example/data/http.wasm
-var exampleWasm []byte
+var exampleWasm = func() []byte {
+	wasmBytes, err := os.ReadFile("example/data/http.wasm")
+	if err != nil {
+		log.Panicln(err)
+	}
+	return wasmBytes
+}()
 
 func BenchmarkStartInstanceV1(b *testing.B) {
 	for i := 0; i < b.N; i++ {
@@ -52,7 +58,7 @@ func startInstanceV1() (instance common.WasmInstance, err error) {
 	return
 }
 
-func BenchmarkCallGuestV1(b *testing.B) {
+func BenchmarkContextLifecycleV1(b *testing.B) {
 	instance, err := startInstanceV1()
 	if err != nil {
 		b.Fatal(err)
@@ -67,10 +73,13 @@ func BenchmarkCallGuestV1(b *testing.B) {
 		b.Fatal(err)
 	}
 
-	// Time the guest call for context creation
+	// Time the guest call for context create and delete, which happens per-request.
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err = ctx.GetExports().ProxyOnContextCreate(int32(i+1), 0); err != nil {
+		if err = ctx.GetExports().ProxyOnContextCreate(int32(1), int32(0)); err != nil {
+			b.Fatal(err)
+		}
+		if _, err = ctx.GetExports().ProxyOnDone(int32(1)); err != nil {
 			b.Fatal(err)
 		}
 	}
