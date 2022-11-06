@@ -18,8 +18,11 @@
 package wasmer
 
 import (
+	"strings"
+
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
-	"mosn.io/proxy-wasm-go-host/proxywasm/common"
+	"mosn.io/mosn/pkg/log"
+	"mosn.io/mosn/pkg/types"
 )
 
 type Module struct {
@@ -27,6 +30,7 @@ type Module struct {
 	module      *wasmerGo.Module
 	abiNameList []string
 	wasiVersion wasmerGo.WasiVersion
+	debug       *dwarfInfo
 	rawBytes    []byte
 }
 
@@ -44,12 +48,39 @@ func NewWasmerModule(vm *VM, module *wasmerGo.Module, wasmBytes []byte) *Module 
 
 func (w *Module) Init() {
 	w.wasiVersion = wasmerGo.GetWasiVersion(w.module)
+	log.DefaultLogger.Infof("[wasmer][module] Init module name: %v, wasi version: %v", w.module.Name(), w.wasiVersion.String())
+
+	w.abiNameList = w.GetABINameList()
+
+	// parse dwarf info from wasm data bytes
+	if debug := parseDwarf(w.rawBytes); debug != nil {
+		w.debug = debug
+	}
+
+	// release raw bytes, the parsing of dwarf info is the only place that uses module raw bytes
+	w.rawBytes = nil
 }
 
-func (w *Module) NewInstance() common.WasmInstance {
+func (w *Module) NewInstance() types.WasmInstance {
+	if w.debug != nil {
+		return NewWasmerInstance(w.vm, w, InstanceWithDebug(w.debug))
+	}
+
 	return NewWasmerInstance(w.vm, w)
 }
 
 func (w *Module) GetABINameList() []string {
-	return nil
+	abiNameList := make([]string, 0)
+
+	exportList := w.module.Exports()
+
+	for _, export := range exportList {
+		if export.Type().Kind() == wasmerGo.FUNCTION {
+			if strings.HasPrefix(export.Name(), "proxy_abi") {
+				abiNameList = append(abiNameList, export.Name())
+			}
+		}
+	}
+
+	return abiNameList
 }

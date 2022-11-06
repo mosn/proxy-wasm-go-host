@@ -25,8 +25,8 @@ type WasmVM interface {
 	// Init got called when creating a new wasm vm(engine)
 	Init()
 
-	// NewModule compiles the 'wasmBytes' into a wasm module
-	NewModule(wasmBytes []byte) WasmModule
+	// NewModule compiles the 'guest' into a wasm module
+	NewModule(guest []byte) WasmModule
 }
 
 // WasmModule represents the wasm module
@@ -38,19 +38,22 @@ type WasmModule interface {
 	NewInstance() WasmInstance
 
 	// GetABINameList returns the abi name list exported by wasm module
+	//
+	// Note: These are the only valid choices for WasmInstance.RegisterImports.
 	GetABINameList() []string
 }
 
 // WasmInstance represents the wasm instance
 type WasmInstance interface {
+	// RegisterImports adds host functions used by the guest for the given
+	// proxy-wasm ABI name. This must be called prior to Start.
+	RegisterImports(abiName string) error
+
 	// Start starts the wasm instance
 	Start() error
 
 	// Stop stops the wasm instance
 	Stop()
-
-	// RegisterFunc registers a func to the wasm instance, should be called before Start()
-	RegisterFunc(namespace string, funcName string, f interface{}) error
 
 	// GetExportsFunc returns the exported func of the wasm instance
 	GetExportsFunc(funcName string) (WasmFunction, error)

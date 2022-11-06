@@ -18,92 +18,97 @@
 package v1
 
 import (
+	"context"
+
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
+	v1 "mosn.io/proxy-wasm-go-host/proxywasm/v1"
 )
 
-func ProxyResumeHttpRequest(instance common.WasmInstance) int32 {
-	ctx := getImportHandler(instance)
+func (h *host) ProxyResumeHttpRequest(ctx context.Context) int32 {
+	ih := getImportHandler(h.Instance)
 
-	return ctx.ResumeHttpRequest().Int32()
+	return ih.ResumeHttpRequest().Int32()
 }
 
-func ProxyResumeHttpResponse(instance common.WasmInstance) int32 {
-	ctx := getImportHandler(instance)
+func (h *host) ProxyResumeHttpResponse(ctx context.Context) int32 {
+	ih := getImportHandler(h.Instance)
 
-	return ctx.ResumeHttpResponse().Int32()
+	return ih.ResumeHttpResponse().Int32()
 }
 
-func ProxySendHttpResponse(instance common.WasmInstance, respCode int32, respCodeDetailPtr int32, respCodeDetailSize int32,
-	respBodyPtr int32, respBodySize int32, additionalHeaderMapDataPtr int32, additionalHeaderSize int32, grpcStatus int32) int32 {
-
+func (h *host) ProxySendHttpResponse(ctx context.Context, respCode int32, respCodeDetailPtr int32, respCodeDetailSize int32,
+	respBodyPtr int32, respBodySize int32, additionalHeaderMapDataPtr int32, additionalHeaderSize int32, grpcStatus int32,
+) int32 {
+	instance := h.Instance
 	respCodeDetail, err := instance.GetMemory(uint64(respCodeDetailPtr), uint64(respCodeDetailSize))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess.Int32()
+		return v1.WasmResultInvalidMemoryAccess.Int32()
 	}
 
 	respBody, err := instance.GetMemory(uint64(respBodyPtr), uint64(respBodySize))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess.Int32()
+		return v1.WasmResultInvalidMemoryAccess.Int32()
 	}
 
 	additionalHeaderMapData, err := instance.GetMemory(uint64(additionalHeaderMapDataPtr), uint64(additionalHeaderSize))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess.Int32()
+		return v1.WasmResultInvalidMemoryAccess.Int32()
 	}
 
 	additionalHeaderMap := common.DecodeMap(additionalHeaderMapData)
 
-	ctx := getImportHandler(instance)
+	ih := getImportHandler(instance)
 
-	return ctx.SendHttpResp(respCode,
+	return ih.SendHttpResp(respCode,
 		common.NewIoBufferBytes(respCodeDetail),
 		common.NewIoBufferBytes(respBody),
 		common.CommonHeader(additionalHeaderMap), grpcStatus).Int32()
 }
 
-func ProxyHttpCall(instance common.WasmInstance, uriPtr int32, uriSize int32,
+func (h *host) ProxyHttpCall(ctx context.Context, uriPtr int32, uriSize int32,
 	headerPairsPtr int32, headerPairsSize int32, bodyPtr int32, bodySize int32, trailerPairsPtr int32, trailerPairsSize int32,
-	timeoutMilliseconds int32, calloutIDPtr int32) int32 {
-
+	timeoutMilliseconds int32, calloutIDPtr int32,
+) int32 {
+	instance := h.Instance
 	url, err := instance.GetMemory(uint64(uriPtr), uint64(uriSize))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess.Int32()
+		return v1.WasmResultInvalidMemoryAccess.Int32()
 	}
 
 	headerMapData, err := instance.GetMemory(uint64(headerPairsPtr), uint64(headerPairsSize))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess.Int32()
+		return v1.WasmResultInvalidMemoryAccess.Int32()
 	}
 	headerMap := common.DecodeMap(headerMapData)
 
 	body, err := instance.GetMemory(uint64(bodyPtr), uint64(bodySize))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess.Int32()
+		return v1.WasmResultInvalidMemoryAccess.Int32()
 	}
 
 	trailerMapData, err := instance.GetMemory(uint64(trailerPairsPtr), uint64(trailerPairsSize))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess.Int32()
+		return v1.WasmResultInvalidMemoryAccess.Int32()
 	}
 	trailerMap := common.DecodeMap(trailerMapData)
 
-	ctx := getImportHandler(instance)
+	ih := getImportHandler(instance)
 
-	calloutID, res := ctx.HttpCall(
+	calloutID, res := ih.HttpCall(
 		string(url),
 		common.CommonHeader(headerMap),
 		common.NewIoBufferBytes(body),
 		common.CommonHeader(trailerMap),
 		timeoutMilliseconds,
 	)
-	if res != WasmResultOk {
+	if res != v1.WasmResultOk {
 		return res.Int32()
 	}
 
 	err = instance.PutUint32(uint64(calloutIDPtr), uint32(calloutID))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess.Int32()
+		return v1.WasmResultInvalidMemoryAccess.Int32()
 	}
 
-	return WasmResultOk.Int32()
+	return v1.WasmResultOk.Int32()
 }

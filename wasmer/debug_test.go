@@ -15,36 +15,27 @@
  * limitations under the License.
  */
 
-package main
+package wasmer
 
 import (
-	"net/http"
+	"io/ioutil"
+	"testing"
 
-	"mosn.io/proxy-wasm-go-host/proxywasm/common"
+	"github.com/stretchr/testify/assert"
 )
 
-// wrapper for http.Header, convert Header to api.HeaderMap.
-type myHeaderMap struct {
-	realMap http.Header
+func TestDebugParseDwarf(t *testing.T) {
+	bytes, err := ioutil.ReadFile("./testdata/data.wasm")
+	assert.Nil(t, err)
+
+	debug := parseDwarf(bytes)
+	assert.NotNil(t, debug)
+	assert.NotNil(t, debug.data)
+	assert.Equal(t, debug.codeSectionOffset, 0x326) // code section start addr
+
+	lr := debug.getLineReader()
+	assert.NotNil(t, lr)
+
+	line := debug.SeekPC(uint64(0x2ef1)) // f3
+	assert.NotNil(t, line)
 }
-
-func (m *myHeaderMap) Get(key string) (string, bool) {
-	return m.realMap.Get(key), true
-}
-
-func (m *myHeaderMap) Set(key, value string) { panic("implemented") }
-
-func (m *myHeaderMap) Add(key, value string) { panic("implemented") }
-
-func (m *myHeaderMap) Del(key string) { panic("implemented") }
-
-func (m *myHeaderMap) Range(f func(key string, value string) bool) {
-	for k, _ := range m.realMap {
-		v := m.realMap.Get(k)
-		f(k, v)
-	}
-}
-
-func (m *myHeaderMap) Clone() common.HeaderMap { panic("implemented") }
-
-func (m *myHeaderMap) ByteSize() uint64 { panic("implemented") }

@@ -50,6 +50,7 @@ type CommonHeader map[string]string
 
 func (h CommonHeader) Get(key string) (value string, ok bool) {
 	value, ok = h[key]
+
 	return
 }
 
@@ -75,13 +76,13 @@ func (h CommonHeader) Range(f func(key, value string) bool) {
 }
 
 func (h CommonHeader) Clone() HeaderMap {
-	copy := make(map[string]string)
+	c := make(map[string]string)
 
 	for k, v := range h {
-		copy[k] = v
+		c[k] = v
 	}
 
-	return CommonHeader(copy)
+	return CommonHeader(c)
 }
 
 func (h CommonHeader) ByteSize() uint64 {
@@ -90,5 +91,6 @@ func (h CommonHeader) ByteSize() uint64 {
 	for k, v := range h {
 		size += uint64(len(k) + len(v))
 	}
+
 	return size
 }

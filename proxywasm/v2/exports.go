@@ -26,6 +26,7 @@ func (a *ABIContext) CallWasmFunction(funcName string, args ...interface{}) (int
 	res, err := ff.Call(args...)
 	if err != nil {
 		a.Instance.HandleError(err)
+
 		return nil, ActionContinue, err
 	}
 
@@ -40,15 +41,14 @@ func (a *ABIContext) ProxyOnMemoryAllocate(memorySize int32) (int32, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	return res.(int32), nil
 }
 
 func (a *ABIContext) ProxyOnContextCreate(contextID int32, parentContextID int32, contextType ContextType) error {
 	_, _, err := a.CallWasmFunction("proxy_on_context_create", contextID, parentContextID)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (a *ABIContext) ProxyOnDone(contextID int32) (int32, error) {
@@ -56,6 +56,7 @@ func (a *ABIContext) ProxyOnDone(contextID int32) (int32, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	return res.(int32), nil
 }
 
@@ -64,6 +65,7 @@ func (a *ABIContext) ProxyOnVmStart(vmID int32, vmConfigurationSize int32) (int3
 	if err != nil {
 		return 0, err
 	}
+
 	return res.(int32), nil
 }
 
@@ -72,6 +74,7 @@ func (a *ABIContext) ProxyOnConfigure(pluginID int32, pluginConfigurationSize in
 	if err != nil {
 		return 0, err
 	}
+
 	return res.(int32), nil
 }
 
@@ -80,6 +83,7 @@ func (a *ABIContext) ProxyOnNewConnection(streamID int32) (Action, error) {
 	if err != nil {
 		return ActionPause, err
 	}
+
 	return action, nil
 }
 
@@ -88,15 +92,14 @@ func (a *ABIContext) ProxyOnDownstreamData(streamID int32, dataSize int32, endOf
 	if err != nil {
 		return ActionPause, err
 	}
+
 	return action, nil
 }
 
 func (a *ABIContext) ProxyOnDownstreamClose(contextID int32, closeSource CloseSourceType) error {
 	_, _, err := a.CallWasmFunction("proxy_on_downstream_close", contextID, closeSource)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (a *ABIContext) ProxyOnUpstreamData(streamID int32, dataSize int32, endOfStream int32) (Action, error) {
@@ -104,15 +107,14 @@ func (a *ABIContext) ProxyOnUpstreamData(streamID int32, dataSize int32, endOfSt
 	if err != nil {
 		return ActionPause, err
 	}
+
 	return action, nil
 }
 
 func (a *ABIContext) ProxyOnUpstreamClose(streamID int32, closeSource CloseSourceType) error {
 	_, _, err := a.CallWasmFunction("proxy_on_upstream_close", streamID, closeSource)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (a *ABIContext) ProxyOnRequestHeaders(streamID int32, numHeaders int32, endOfStream int32) (Action, error) {
@@ -120,6 +122,7 @@ func (a *ABIContext) ProxyOnRequestHeaders(streamID int32, numHeaders int32, end
 	if err != nil {
 		return ActionPause, err
 	}
+
 	return action, nil
 }
 
@@ -128,6 +131,7 @@ func (a *ABIContext) ProxyOnRequestBody(streamID int32, bodySize int32, endOfStr
 	if err != nil {
 		return ActionPause, err
 	}
+
 	return action, nil
 }
 
@@ -136,6 +140,7 @@ func (a *ABIContext) ProxyOnRequestTrailers(streamID int32, numTrailers int32, e
 	if err != nil {
 		return ActionPause, err
 	}
+
 	return action, nil
 }
 
@@ -144,6 +149,7 @@ func (a *ABIContext) ProxyOnRequestMetadata(streamID int32, numElements int32) (
 	if err != nil {
 		return ActionPause, err
 	}
+
 	return action, nil
 }
 
@@ -152,6 +158,7 @@ func (a *ABIContext) ProxyOnResponseHeaders(streamID int32, numHeaders int32, en
 	if err != nil {
 		return ActionPause, err
 	}
+
 	return action, nil
 }
 
@@ -160,6 +167,7 @@ func (a *ABIContext) ProxyOnResponseBody(streamID int32, bodySize int32, endOfSt
 	if err != nil {
 		return ActionPause, err
 	}
+
 	return action, nil
 }
 
@@ -168,6 +176,7 @@ func (a *ABIContext) ProxyOnResponseTrailers(streamID int32, numTrailers int32, 
 	if err != nil {
 		return ActionPause, err
 	}
+
 	return action, nil
 }
 
@@ -176,63 +185,50 @@ func (a *ABIContext) ProxyOnResponseMetadata(streamID int32, numElements int32) 
 	if err != nil {
 		return ActionPause, err
 	}
+
 	return action, nil
 }
 
 func (a *ABIContext) ProxyOnQueueReady(queueID int32) error {
 	_, _, err := a.CallWasmFunction("proxy_on_queue_ready", queueID)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (a *ABIContext) ProxyOnTimerReady(timerID int32) error {
 	_, _, err := a.CallWasmFunction("proxy_on_timer_ready", timerID)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (a *ABIContext) ProxyOnHttpCallResponse(pluginContextID int32, calloutID int32, numHeaders int32, bodySize int32, numTrailers int32) error {
 	_, _, err := a.CallWasmFunction("proxy_on_http_call_response", pluginContextID, calloutID, numHeaders, bodySize, numTrailers)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (a *ABIContext) ProxyOnGrpcCallResponseHeaderMetadata(calloutID int32, numHeaders int32) error {
 	_, _, err := a.CallWasmFunction("proxy_on_grpc_call_response_header_metadata", calloutID, numHeaders)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (a *ABIContext) ProxyOnGrpcCallResponseMessage(calloutID int32, messageSize int32) error {
 	_, _, err := a.CallWasmFunction("proxy_on_grpc_call_response_message", calloutID, messageSize)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (a *ABIContext) ProxyOnGrpcCallResponseTrailerMetadata(calloutID int32, numTrailers int32) error {
 	_, _, err := a.CallWasmFunction("proxy_on_grpc_call_response_trailer_metadata", calloutID, numTrailers)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (a *ABIContext) ProxyOnGrpcCallClose(calloutID int32, statusCode int32) error {
 	_, _, err := a.CallWasmFunction("proxy_on_grpc_call_close", calloutID, statusCode)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (a *ABIContext) ProxyOnCustomCallback(customCallbackID int32, parametersSize int32) (int32, error) {
@@ -240,5 +236,6 @@ func (a *ABIContext) ProxyOnCustomCallback(customCallbackID int32, parametersSiz
 	if err != nil {
 		return 0, err
 	}
+
 	return res.(int32), nil
 }

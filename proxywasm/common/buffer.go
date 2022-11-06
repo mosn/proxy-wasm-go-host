@@ -50,8 +50,9 @@ func (c *CommonBuffer) Bytes() []byte {
 	return c.buf
 }
 
-func (c *CommonBuffer) Write(p []byte) (n int, err error) {
+func (c *CommonBuffer) Write(p []byte) (int, error) {
 	c.buf = append(c.buf, p...)
+
 	return len(p), nil
 }
 

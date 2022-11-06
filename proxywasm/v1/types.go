@@ -65,7 +65,7 @@ type WasmResult int32
 const (
 	WasmResultOk                   WasmResult = 0
 	WasmResultNotFound             WasmResult = 1  // The result could not be found, e.g. a provided key did not appear in a table.
-	WasmResultBadArgument          WasmResult = 2  // An argument was bad, e.g. did not not conform to the required range.
+	WasmResultBadArgument          WasmResult = 2  // An argument was bad, e.g. did not conform to the required range.
 	WasmResultSerializationFailure WasmResult = 3  // A protobuf could not be serialized.
 	WasmResultParseFailure         WasmResult = 4  // A protobuf could not be parsed.
 	WasmResultBadExpression        WasmResult = 5  // A provided expression (e.g. "foo.bar") was illegal or unrecognized.
