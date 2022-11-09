@@ -27,7 +27,7 @@ import (
 
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 	v1 "mosn.io/proxy-wasm-go-host/proxywasm/v1"
-	"mosn.io/proxy-wasm-go-host/wasmer"
+	"mosn.io/proxy-wasm-go-host/wazero"
 )
 
 var (
@@ -129,7 +129,7 @@ func getWasmContext() *v1.ABIContext {
 			log.Panicln(err)
 		}
 
-		instance := wasmer.NewInstanceFromBinary(guest)
+		instance := wazero.NewInstanceFromBinary(guest)
 
 		// create ABI context
 		wasmCtx = &v1.ABIContext{

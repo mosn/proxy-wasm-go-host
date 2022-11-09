@@ -34,6 +34,9 @@ jobs:
       - name: Build
         run: go build ./...
 
+      - name: Build (wasmer)
+        run: go build -tags='wasmer' ./...
+
   test:
     runs-on: ubuntu-latest
     # A matrix proves the supported range of Go versions work. This must always
@@ -71,3 +74,6 @@ jobs:
 
       - name: Test
         run: go test -v ./...
+
+      - name: Test (wasmer)
+        run: go test -tags='wasmer' -v ./...

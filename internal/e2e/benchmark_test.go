@@ -15,20 +15,26 @@
  * limitations under the License.
  */
 
-package wasm
+package e2e
 
 import (
 	_ "embed"
 	"testing"
 
+	"mosn.io/pkg/log"
+
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 	v1 "mosn.io/proxy-wasm-go-host/proxywasm/v1"
 	v2 "mosn.io/proxy-wasm-go-host/proxywasm/v2"
-	"mosn.io/proxy-wasm-go-host/wasmer"
+	"mosn.io/proxy-wasm-go-host/wazero"
 )
 
-func BenchmarkStartABIContextV1_wasmer(b *testing.B) {
-	benchmarkStartABIContextV1(b, wasmer.NewInstanceFromBinary)
+func init() {
+	log.DefaultLogger.SetLogLevel(log.ERROR)
+}
+
+func BenchmarkStartABIContextV1_wazero(b *testing.B) {
+	benchmarkStartABIContextV1(b, wazero.NewInstanceFromBinary)
 }
 
 func benchmarkStartABIContextV1(b *testing.B, newInstance func([]byte) common.WasmInstance) {
@@ -41,8 +47,8 @@ func benchmarkStartABIContextV1(b *testing.B, newInstance func([]byte) common.Wa
 	}
 }
 
-func BenchmarkAddRequestHeaderV1_wasmer(b *testing.B) {
-	benchmarkAddRequestHeaderV1(b, wasmer.NewInstanceFromBinary)
+func BenchmarkAddRequestHeaderV1_wazero(b *testing.B) {
+	benchmarkAddRequestHeaderV1(b, wazero.NewInstanceFromBinary)
 }
 
 func benchmarkAddRequestHeaderV1(b *testing.B, newInstance func([]byte) common.WasmInstance) {
@@ -92,8 +98,8 @@ func benchmarkV1(b *testing.B, instance common.WasmInstance, testV1 func(wasmCtx
 	}
 }
 
-func BenchmarkStartABIContextV2_wasmer(b *testing.B) {
-	benchmarkStartABIContextV2(b, wasmer.NewInstanceFromBinary)
+func BenchmarkStartABIContextV2_wazero(b *testing.B) {
+	benchmarkStartABIContextV2(b, wazero.NewInstanceFromBinary)
 }
 
 func benchmarkStartABIContextV2(b *testing.B, newInstance func([]byte) common.WasmInstance) {
@@ -106,8 +112,8 @@ func benchmarkStartABIContextV2(b *testing.B, newInstance func([]byte) common.Wa
 	}
 }
 
-func BenchmarkAddRequestHeaderV2_wasmer(b *testing.B) {
-	benchmarkAddRequestHeaderV2(b, wasmer.NewInstanceFromBinary)
+func BenchmarkAddRequestHeaderV2_wazero(b *testing.B) {
+	benchmarkAddRequestHeaderV2(b, wazero.NewInstanceFromBinary)
 }
 
 func benchmarkAddRequestHeaderV2(b *testing.B, newInstance func([]byte) common.WasmInstance) {
