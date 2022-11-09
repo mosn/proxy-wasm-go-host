@@ -20,6 +20,7 @@ package wasmer
 import (
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
 	"mosn.io/mosn/pkg/log"
+
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 

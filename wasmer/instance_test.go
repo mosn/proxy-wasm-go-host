@@ -19,7 +19,6 @@ package wasmer
 
 import (
 	"context"
-	v1 "mosn.io/proxy-wasm-go-host/proxywasm/v1"
 	"reflect"
 	"testing"
 	"time"
@@ -29,6 +28,8 @@ import (
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
 	"mosn.io/mosn/pkg/mock"
 	"mosn.io/mosn/pkg/types"
+
+	v1 "mosn.io/proxy-wasm-go-host/proxywasm/v1"
 )
 
 func TestRegisterImports(t *testing.T) {
