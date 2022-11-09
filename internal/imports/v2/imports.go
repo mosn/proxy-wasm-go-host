@@ -50,8 +50,8 @@ func HostFunctions(instance common.WasmInstance) map[string]interface{} {
 
 	hostFuncs["proxy_get_header_map_pairs"] = h.ProxyGetHeaderMapPairs
 
-	hostFuncs["proxy_get_map_values"] = h.ProxyGetMapValues
-	hostFuncs["proxy_set_map_values"] = h.ProxySetMapValues
+	hostFuncs["proxy_get_header_map_value"] = h.ProxyGetHeaderMapValue
+	hostFuncs["proxy_replace_header_map_value"] = h.ProxyReplaceHeaderMapValue
 
 	hostFuncs["proxy_open_shared_kvstore"] = h.ProxyOpenSharedKvstore
 	hostFuncs["proxy_get_shared_kvstore_key_values"] = h.ProxyGetSharedKvstoreKeyValues
@@ -427,21 +427,16 @@ func (h *host) ProxyGetHeaderMapPairs(ctx context.Context, mapType int32, return
 	return int32(v2.ResultOk)
 }
 
-func (h *host) ProxyGetMapValues(ctx context.Context, mapType v2.MapType, keysData int32, keysSize int32,
-	returnMapData int32, returnMapSize int32,
+func (h *host) ProxyGetHeaderMapValue(
+	ctx context.Context, mapType v2.MapType, keyData, keySize, valueData, valueSize int32,
 ) v2.Result {
 	instance := h.Instance
 	m := GetMap(instance, mapType)
-	if m == nil {
+	if m == nil || keySize == 0 {
 		return v2.ResultNotFound
 	}
 
-	if keysSize == 0 {
-		// If the list of keys is empty,then all key-values in the map are returned.
-		return copyMapIntoInstance(m, instance, returnMapData, returnMapSize)
-	}
-
-	key, err := instance.GetMemory(uint64(keysData), uint64(keysSize))
+	key, err := instance.GetMemory(uint64(keyData), uint64(keySize))
 	if err != nil {
 		return v2.ResultInvalidMemoryAccess
 	}
@@ -454,11 +449,11 @@ func (h *host) ProxyGetMapValues(ctx context.Context, mapType v2.MapType, keysDa
 		return v2.ResultNotFound
 	}
 
-	return copyIntoInstance(instance, []byte(value), returnMapData, returnMapSize)
+	return copyIntoInstance(instance, []byte(value), valueData, valueSize)
 }
 
-func (h *host) ProxySetMapValues(ctx context.Context, mapType v2.MapType, removeKeysData int32, removeKeysSize int32,
-	mapData int32, mapSize int32,
+func (h *host) ProxyReplaceHeaderMapValue(
+	ctx context.Context, mapType v2.MapType, keyData, keySize, valueData, valueSize int32,
 ) v2.Result {
 	instance := h.Instance
 	m := GetMap(instance, mapType)
@@ -466,26 +461,16 @@ func (h *host) ProxySetMapValues(ctx context.Context, mapType v2.MapType, remove
 		return v2.ResultNotFound
 	}
 
-	// add new map data
-	newMapContent, err := instance.GetMemory(uint64(mapData), uint64(mapSize))
+	key, err := instance.GetMemory(uint64(keyData), uint64(keySize))
+	if err != nil {
+		return v2.ResultInvalidMemoryAccess
+	}
+	value, err := instance.GetMemory(uint64(valueData), uint64(valueSize))
 	if err != nil {
 		return v2.ResultInvalidMemoryAccess
 	}
 
-	newMap := common.DecodeMap(newMapContent)
-
-	for k, v := range newMap {
-		m.Set(k, v)
-	}
-
-	// remove unwanted data
-	key, err := instance.GetMemory(uint64(removeKeysData), uint64(removeKeysSize))
-	if err != nil {
-		return v2.ResultInvalidMemoryAccess
-	}
-	if len(key) != 0 {
-		m.Del(string(key))
-	}
+	m.Set(string(key), string(value))
 
 	return v2.ResultOk
 }

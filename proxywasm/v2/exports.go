@@ -60,6 +60,12 @@ func (a *ABIContext) ProxyOnDone(contextID int32) (int32, error) {
 	return res.(int32), nil
 }
 
+func (a *ABIContext) ProxyOnDelete(contextID int32) error {
+	_, _, err := a.CallWasmFunction("proxy_on_delete", contextID)
+
+	return err
+}
+
 func (a *ABIContext) ProxyOnVmStart(vmID int32, vmConfigurationSize int32) (int32, error) {
 	res, _, err := a.CallWasmFunction("proxy_on_vm_start", vmID, vmConfigurationSize)
 	if err != nil {
