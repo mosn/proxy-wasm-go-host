@@ -27,17 +27,17 @@ import (
 	"sync"
 	"sync/atomic"
 
-	importsv1 "mosn.io/proxy-wasm-go-host/internal/imports/v1"
-	importsv2 "mosn.io/proxy-wasm-go-host/internal/imports/v2"
-	"mosn.io/proxy-wasm-go-host/proxywasm/common"
-	v1 "mosn.io/proxy-wasm-go-host/proxywasm/v1"
-	v2 "mosn.io/proxy-wasm-go-host/proxywasm/v2"
-
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
 	"mosn.io/mosn/pkg/log"
 	"mosn.io/mosn/pkg/types"
 	"mosn.io/mosn/pkg/wasm/abi"
 	"mosn.io/pkg/utils"
+
+	importsv1 "mosn.io/proxy-wasm-go-host/internal/imports/v1"
+	importsv2 "mosn.io/proxy-wasm-go-host/internal/imports/v2"
+	"mosn.io/proxy-wasm-go-host/proxywasm/common"
+	v1 "mosn.io/proxy-wasm-go-host/proxywasm/v1"
+	v2 "mosn.io/proxy-wasm-go-host/proxywasm/v2"
 )
 
 var (
