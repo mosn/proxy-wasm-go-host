@@ -18,15 +18,26 @@
 package wasmer
 
 import (
+	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime/debug"
 	"sync"
 	"sync/atomic"
 
-	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
+	importsv1 "mosn.io/proxy-wasm-go-host/internal/imports/v1"
+	importsv2 "mosn.io/proxy-wasm-go-host/internal/imports/v2"
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
+	v1 "mosn.io/proxy-wasm-go-host/proxywasm/v1"
+	v2 "mosn.io/proxy-wasm-go-host/proxywasm/v2"
+
+	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
+	"mosn.io/mosn/pkg/log"
+	"mosn.io/mosn/pkg/types"
+	"mosn.io/mosn/pkg/wasm/abi"
+	"mosn.io/pkg/utils"
 )
 
 var (
@@ -44,6 +55,8 @@ type Instance struct {
 	module       *Module
 	importObject *wasmerGo.ImportObject
 	instance     *wasmerGo.Instance
+	debug        *dwarfInfo
+	abiList      []types.ABI
 
 	lock     sync.Mutex
 	started  uint32
@@ -60,6 +73,14 @@ type Instance struct {
 
 type InstanceOptions func(instance *Instance)
 
+func InstanceWithDebug(debug *dwarfInfo) InstanceOptions {
+	return func(instance *Instance) {
+		if debug != nil {
+			instance.debug = debug
+		}
+	}
+}
+
 func NewWasmerInstance(vm *VM, module *Module, options ...InstanceOptions) *Instance {
 	ins := &Instance{
 		vm:     vm,
@@ -74,12 +95,16 @@ func NewWasmerInstance(vm *VM, module *Module, options ...InstanceOptions) *Inst
 
 	wasiEnv, err := wasmerGo.NewWasiStateBuilder("").Finalize()
 	if err != nil || wasiEnv == nil {
+		log.DefaultLogger.Warnf("[wasmer][instance] NewWasmerInstance fail to create wasi env, err: %v", err)
+
 		ins.importObject = wasmerGo.NewImportObject()
 		return ins
 	}
 
 	imo, err := wasiEnv.GenerateImportObject(ins.vm.store, ins.module.module)
 	if err != nil {
+		log.DefaultLogger.Warnf("[wasmer][instance] NewWasmerInstance fail to create import object, err: %v", err)
+
 		ins.importObject = wasmerGo.NewImportObject()
 	} else {
 		ins.importObject = imo
@@ -88,105 +113,152 @@ func NewWasmerInstance(vm *VM, module *Module, options ...InstanceOptions) *Inst
 	return ins
 }
 
-func (w *Instance) GetData() interface{} {
-	return w.data
+func (i *Instance) GetData() interface{} {
+	return i.data
 }
 
-func (w *Instance) SetData(data interface{}) {
-	w.data = data
+func (i *Instance) SetData(data interface{}) {
+	i.data = data
 }
 
-func (w *Instance) Acquire() bool {
-	w.lock.Lock()
-	defer w.lock.Unlock()
+func (i *Instance) Acquire() bool {
+	i.lock.Lock()
+	defer i.lock.Unlock()
 
-	if !w.checkStart() {
+	if !i.checkStart() {
 		return false
 	}
 
-	w.refCount++
+	i.refCount++
 
 	return true
 }
 
-func (w *Instance) Release() {
-	w.lock.Lock()
-	w.refCount--
+func (i *Instance) Release() {
+	i.lock.Lock()
+	i.refCount--
 
-	if w.refCount <= 0 {
-		w.stopCond.Broadcast()
+	if i.refCount <= 0 {
+		i.stopCond.Broadcast()
 	}
-	w.lock.Unlock()
+	i.lock.Unlock()
 }
 
-func (w *Instance) Lock(data interface{}) {
-	w.lock.Lock()
-	w.data = data
+func (i *Instance) Lock(data interface{}) {
+	i.lock.Lock()
+	i.data = data
 }
 
-func (w *Instance) Unlock() {
-	w.data = nil
-	w.lock.Unlock()
+func (i *Instance) Unlock() {
+	i.data = nil
+	i.lock.Unlock()
 }
 
-func (w *Instance) GetModule() common.WasmModule {
-	return w.module
+func (i *Instance) GetModule() types.WasmModule {
+	return i.module
 }
 
-func (w *Instance) Start() error {
-	ins, err := wasmerGo.NewInstance(w.module.module, w.importObject)
+func (i *Instance) Start() error {
+	i.abiList = abi.GetABIList(i)
+
+	for _, abi := range i.abiList {
+		abi.OnInstanceCreate(i)
+	}
+
+	ins, err := wasmerGo.NewInstance(i.module.module, i.importObject)
 	if err != nil {
+		log.DefaultLogger.Errorf("[wasmer][instance] Start fail to new wasmer-go instance, err: %v", err)
 		return err
 	}
 
-	w.instance = ins
+	i.instance = ins
 
-	f, err := w.instance.Exports.GetFunction("_start")
+	f, err := i.instance.Exports.GetFunction("_start")
 	if err != nil {
+		log.DefaultLogger.Errorf("[wasmer][instance] Start fail to get export func: _start, err: %v", err)
 		return err
 	}
 
 	_, err = f()
 	if err != nil {
-		w.HandleError(err)
+		log.DefaultLogger.Errorf("[wasmer][instance] Start fail to call _start func, err: %v", err)
+		i.HandleError(err)
 		return err
 	}
 
-	atomic.StoreUint32(&w.started, 1)
+	for _, abi := range i.abiList {
+		abi.OnInstanceStart(i)
+	}
+
+	atomic.StoreUint32(&i.started, 1)
 
 	return nil
 }
 
-func (w *Instance) Stop() {
-	go func() {
-		w.lock.Lock()
-		for w.refCount > 0 {
-			w.stopCond.Wait()
+func (i *Instance) Stop() {
+	utils.GoWithRecover(func() {
+		i.lock.Lock()
+		for i.refCount > 0 {
+			i.stopCond.Wait()
 		}
-		_ = atomic.CompareAndSwapUint32(&w.started, 1, 0)
-		w.lock.Unlock()
-	}()
+		swapped := atomic.CompareAndSwapUint32(&i.started, 1, 0)
+		i.lock.Unlock()
+
+		if swapped {
+			for _, abi := range i.abiList {
+				abi.OnInstanceDestroy(i)
+			}
+		}
+	}, nil)
 }
 
 // return true is Instance is started, false if not started.
-func (w *Instance) checkStart() bool {
-	return atomic.LoadUint32(&w.started) == 1
+func (i *Instance) checkStart() bool {
+	return atomic.LoadUint32(&i.started) == 1
 }
 
-func (w *Instance) RegisterFunc(namespace string, funcName string, f interface{}) error {
-	if w.checkStart() {
+func (i *Instance) RegisterImports(abiName string) error {
+	if i.checkStart() {
+		log.DefaultLogger.Errorf("[wasmer][instance] RegisterFunc not allow to register func after instance started, abiName: %s",
+			abiName)
 		return ErrInstanceAlreadyStart
 	}
 
+	// proxy-wasm cannot run multiple ABI in the same instance because the ABI
+	// collides. They all use the same module name: "env"
+	module := "env"
+
+	var hostFunctions func(common.WasmInstance) map[string]interface{}
+	switch abiName {
+	case v1.ProxyWasmABI_0_1_0:
+		hostFunctions = importsv1.HostFunctions
+	case v2.ProxyWasmABI_0_2_0:
+		hostFunctions = importsv2.HostFunctions
+	default:
+		return fmt.Errorf("unknown ABI: %s", abiName)
+	}
+
+	for n, f := range hostFunctions(i) {
+		if err := i.registerFunc(module, n, f); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (i *Instance) registerFunc(namespace string, funcName string, f interface{}) error {
 	if namespace == "" || funcName == "" {
+		log.DefaultLogger.Errorf("[wasmer][instance] RegisterFunc invalid param, namespace: %v, funcName: %v", namespace, funcName)
 		return ErrInvalidParam
 	}
 
 	if f == nil || reflect.ValueOf(f).IsNil() {
+		log.DefaultLogger.Errorf("[wasmer][instance] RegisterFunc f is nil")
 		return ErrInvalidParam
 	}
 
 	if reflect.TypeOf(f).Kind() != reflect.Func {
+		log.DefaultLogger.Errorf("[wasmer][instance] RegisterFunc f is not func, actual type: %v", reflect.TypeOf(f))
 		return ErrRegisterNotFunc
 	}
 
@@ -194,6 +266,7 @@ func (w *Instance) RegisterFunc(namespace string, funcName string, f interface{}
 
 	argsNum := funcType.NumIn()
 	if argsNum < 1 {
+		log.DefaultLogger.Errorf("[wasmer][instance] RegisterFunc invalid args num: %v, must >= 1", argsNum)
 		return ErrRegisterArgNum
 	}
 
@@ -209,24 +282,28 @@ func (w *Instance) RegisterFunc(namespace string, funcName string, f interface{}
 	}
 
 	fwasmer := wasmerGo.NewFunction(
-		w.vm.store,
+		i.vm.store,
 		wasmerGo.NewFunctionType(argsKind, retsKind),
 		func(args []wasmerGo.Value) (callRes []wasmerGo.Value, err error) {
 			defer func() {
 				if r := recover(); r != nil {
+					log.DefaultLogger.Errorf("[wasmer][instance] RegisterFunc recover func call: %v, r: %v, stack: %v",
+						funcName, r, string(debug.Stack()))
 					callRes = nil
 					err = fmt.Errorf("panic [%v] when calling func [%v]", r, funcName)
 				}
 			}()
 
-			aa := make([]reflect.Value, 1+len(args))
-			aa[0] = reflect.ValueOf(w)
+			callArgs := make([]reflect.Value, 1+len(args))
+
+			// wasmer cannot propagate context at the moment, so substitute with context.Background
+			callArgs[0] = reflect.ValueOf(context.Background())
 
 			for i, arg := range args {
-				aa[i+1] = convertToGoTypes(arg)
+				callArgs[i+1] = convertToGoTypes(arg)
 			}
 
-			callResult := reflect.ValueOf(f).Call(aa)
+			callResult := reflect.ValueOf(f).Call(callArgs)
 
 			ret := convertFromGoValue(callResult[0])
 
@@ -234,70 +311,73 @@ func (w *Instance) RegisterFunc(namespace string, funcName string, f interface{}
 		},
 	)
 
-	w.importObject.Register(namespace, map[string]wasmerGo.IntoExtern{
+	i.importObject.Register(namespace, map[string]wasmerGo.IntoExtern{
 		funcName: fwasmer,
 	})
 
 	return nil
 }
 
-func (w *Instance) Malloc(size int32) (uint64, error) {
-	if !w.checkStart() {
+func (i *Instance) Malloc(size int32) (uint64, error) {
+	if !i.checkStart() {
+		log.DefaultLogger.Errorf("[wasmer][instance] call malloc before starting instance")
 		return 0, ErrInstanceNotStart
 	}
 
-	malloc, err := w.GetExportsFunc("malloc")
+	malloc, err := i.GetExportsFunc("malloc")
 	if err != nil {
 		return 0, err
 	}
 
 	addr, err := malloc.Call(size)
 	if err != nil {
-		w.HandleError(err)
+		i.HandleError(err)
 		return 0, err
 	}
 
 	return uint64(addr.(int32)), nil
 }
 
-func (w *Instance) GetExportsFunc(funcName string) (common.WasmFunction, error) {
-	if !w.checkStart() {
+func (i *Instance) GetExportsFunc(funcName string) (types.WasmFunction, error) {
+	if !i.checkStart() {
+		log.DefaultLogger.Errorf("[wasmer][instance] call GetExportsFunc before starting instance")
 		return nil, ErrInstanceNotStart
 	}
 
-	if v, ok := w.funcCache.Load(funcName); ok {
+	if v, ok := i.funcCache.Load(funcName); ok {
 		return v.(*wasmerGo.Function), nil
 	}
 
-	f, err := w.instance.Exports.GetRawFunction(funcName)
+	f, err := i.instance.Exports.GetRawFunction(funcName)
 	if err != nil {
 		return nil, err
 	}
 
-	w.funcCache.Store(funcName, f)
+	i.funcCache.Store(funcName, f)
 
 	return f, nil
 }
 
-func (w *Instance) GetExportsMem(memName string) ([]byte, error) {
-	if !w.checkStart() {
+func (i *Instance) GetExportsMem(memName string) ([]byte, error) {
+	if !i.checkStart() {
+		log.DefaultLogger.Errorf("[wasmer][instance] call GetExportsMem before starting instance")
 		return nil, ErrInstanceNotStart
 	}
 
-	if w.memory == nil {
-		m, err := w.instance.Exports.GetMemory(memName)
+	if i.memory == nil {
+		m, err := i.instance.Exports.GetMemory(memName)
 		if err != nil {
 			return nil, err
 		}
 
-		w.memory = m
+		i.memory = m
 	}
 
-	return w.memory.Data(), nil
+	return i.memory.Data(), nil
 }
 
-func (w *Instance) GetMemory(addr uint64, size uint64) ([]byte, error) {
-	mem, err := w.GetExportsMem("memory")
+func (i *Instance) GetMemory(addr uint64, size uint64) ([]byte, error) {
+	mem, err := i.GetExportsMem("memory")
 	if err != nil {
 		return nil, err
 	}
@@ -309,8 +389,8 @@ func (w *Instance) GetMemory(addr uint64, size uint64) ([]byte, error) {
 	return mem[addr : addr+size], nil
 }
 
-func (w *Instance) PutMemory(addr uint64, size uint64, content []byte) error {
-	mem, err := w.GetExportsMem("memory")
+func (i *Instance) PutMemory(addr uint64, size uint64, content []byte) error {
+	mem, err := i.GetExportsMem("memory")
 	if err != nil {
 		return err
 	}
@@ -329,8 +409,8 @@ func (w *Instance) PutMemory(addr uint64, size uint64, content []byte) error {
 	return nil
 }
 
-func (w *Instance) GetByte(addr uint64) (byte, error) {
-	mem, err := w.GetExportsMem("memory")
+func (i *Instance) GetByte(addr uint64) (byte, error) {
+	mem, err := i.GetExportsMem("memory")
 	if err != nil {
 		return 0, err
 	}
@@ -342,8 +422,8 @@ func (w *Instance) GetByte(addr uint64) (byte, error) {
 	return mem[addr], nil
 }
 
-func (w *Instance) PutByte(addr uint64, b byte) error {
-	mem, err := w.GetExportsMem("memory")
+func (i *Instance) PutByte(addr uint64, b byte) error {
+	mem, err := i.GetExportsMem("memory")
 	if err != nil {
 		return err
 	}
@@ -357,8 +437,8 @@ func (w *Instance) PutByte(addr uint64, b byte) error {
 	return nil
 }
 
-func (w *Instance) GetUint32(addr uint64) (uint32, error) {
-	mem, err := w.GetExportsMem("memory")
+func (i *Instance) GetUint32(addr uint64) (uint32, error) {
+	mem, err := i.GetExportsMem("memory")
 	if err != nil {
 		return 0, err
 	}
@@ -370,8 +450,8 @@ func (w *Instance) GetUint32(addr uint64) (uint32, error) {
 	return binary.LittleEndian.Uint32(mem[addr:]), nil
 }
 
-func (w *Instance) PutUint32(addr uint64, value uint32) error {
-	mem, err := w.GetExportsMem("memory")
+func (i *Instance) PutUint32(addr uint64, value uint32) error {
+	mem, err := i.GetExportsMem("memory")
 	if err != nil {
 		return err
 	}
@@ -385,9 +465,36 @@ func (w *Instance) PutUint32(addr uint64, value uint32) error {
 	return nil
 }
 
-func (w *Instance) HandleError(err error) {
+func (i *Instance) HandleError(err error) {
 	var trapError *wasmerGo.TrapError
 	if !errors.As(err, &trapError) {
 		return
+	}
+
+	trace := trapError.Trace()
+	if trace == nil {
+		return
+	}
+
+	log.DefaultLogger.Errorf("[wasmer][instance] HandleError err: %v, trace:", err)
+
+	if i.debug == nil {
+		// do not have dwarf debug info
+		for _, t := range trace {
+			log.DefaultLogger.Errorf("[wasmer][instance]\t funcIndex: %v, funcOffset: 0x%08x, moduleOffset: 0x%08x",
+				t.FunctionIndex(), t.FunctionOffset(), t.ModuleOffset())
+		}
+	} else {
+		for _, t := range trace {
+			pc := uint64(t.ModuleOffset())
+			line := i.debug.SeekPC(pc)
+			if line != nil {
+				log.DefaultLogger.Errorf("[wasmer][instance]\t funcIndex: %v, funcOffset: 0x%08x, pc: 0x%08x %v:%v",
+					t.FunctionIndex(), t.FunctionOffset(), pc, line.File.Name, line.Line)
+			} else {
+				log.DefaultLogger.Errorf("[wasmer][instance]\t funcIndex: %v, funcOffset: 0x%08x, pc: 0x%08x fail to seek pc",
+					t.FunctionIndex(), t.FunctionOffset(), t.ModuleOffset())
+			}
+		}
 	}
 }

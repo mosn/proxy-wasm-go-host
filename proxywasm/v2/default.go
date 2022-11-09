@@ -55,7 +55,8 @@ func (d *DefaultImportsHandler) CloseCustomStream(streamType StreamType) Result 
 }
 
 func (d *DefaultImportsHandler) SendHttpResp(responseCode int32, responseCodeDetails common.IoBuffer,
-	responseBody common.IoBuffer, additionalHeadersMap common.HeaderMap, grpcStatus int32) Result {
+	responseBody common.IoBuffer, additionalHeadersMap common.HeaderMap, grpcStatus int32,
+) Result {
 	return ResultUnimplemented
 }
 
@@ -143,17 +144,20 @@ func (d *DefaultImportsHandler) IncrementMetricValue(metricID uint32, offset int
 func (d *DefaultImportsHandler) DeleteMetric(metricID uint32) Result { return ResultUnimplemented }
 
 func (d *DefaultImportsHandler) DispatchHttpCall(upstream string, headersMap common.HeaderMap, bodyData common.IoBuffer,
-	trailersMap common.HeaderMap, timeoutMilliseconds uint32) (uint32, Result) {
+	trailersMap common.HeaderMap, timeoutMilliseconds uint32,
+) (uint32, Result) {
 	return 0, ResultUnimplemented
 }
 
 func (d *DefaultImportsHandler) DispatchGrpcCall(upstream string, serviceName string, serviceMethod string,
-	initialMetadataMap common.HeaderMap, grpcMessage common.IoBuffer, timeoutMilliseconds uint32) (uint32, Result) {
+	initialMetadataMap common.HeaderMap, grpcMessage common.IoBuffer, timeoutMilliseconds uint32,
+) (uint32, Result) {
 	return 0, ResultUnimplemented
 }
 
 func (d *DefaultImportsHandler) OpenGrpcStream(upstream string, serviceName string, serviceMethod string,
-	initialMetadataMap common.HeaderMap) (uint32, Result) {
+	initialMetadataMap common.HeaderMap,
+) (uint32, Result) {
 	return 0, ResultUnimplemented
 }
 

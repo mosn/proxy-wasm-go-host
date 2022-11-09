@@ -17,16 +17,16 @@
 
 package v1
 
-import "mosn.io/proxy-wasm-go-host/proxywasm/common"
+import "context"
 
-func ProxyResumeDownstream(instance common.WasmInstance) int32 {
-	ctx := getImportHandler(instance)
+func (h *host) ProxyResumeDownstream(ctx context.Context) int32 {
+	ih := getImportHandler(h.Instance)
 
-	return ctx.ResumeDownstream().Int32()
+	return ih.ResumeDownstream().Int32()
 }
 
-func ProxyResumeUpstream(instance common.WasmInstance) int32 {
-	ctx := getImportHandler(instance)
+func (h *host) ProxyResumeUpstream(ctx context.Context) int32 {
+	ih := getImportHandler(h.Instance)
 
-	return ctx.ResumeUpstream().Int32()
+	return ih.ResumeUpstream().Int32()
 }

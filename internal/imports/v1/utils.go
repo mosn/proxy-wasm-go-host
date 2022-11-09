@@ -15,44 +15,64 @@
  * limitations under the License.
  */
 
-package v2
+package v1
 
-import "mosn.io/proxy-wasm-go-host/proxywasm/common"
+import (
+	"mosn.io/proxy-wasm-go-host/proxywasm/common"
+	v1 "mosn.io/proxy-wasm-go-host/proxywasm/v1"
+)
 
-func intToBool(i int32) bool {
-	if i == 0 {
-		return false
-	}
-	return true
-}
-
-func copyIntoInstance(instance common.WasmInstance, value []byte, retPtr int32, retSize int32) Result {
+func copyIntoInstance(instance common.WasmInstance, value string, retPtr int32, retSize int32) v1.WasmResult {
 	addr, err := instance.Malloc(int32(len(value)))
 	if err != nil {
-		return ResultInvalidMemoryAccess
+		return v1.WasmResultInvalidMemoryAccess
 	}
 
-	err = instance.PutMemory(addr, uint64(len(value)), value)
+	err = instance.PutMemory(addr, uint64(len(value)), []byte(value))
 	if err != nil {
-		return ResultInvalidMemoryAccess
+		return v1.WasmResultInvalidMemoryAccess
 	}
 
 	err = instance.PutUint32(uint64(retPtr), uint32(addr))
 	if err != nil {
-		return ResultInvalidMemoryAccess
+		return v1.WasmResultInvalidMemoryAccess
 	}
 
 	err = instance.PutUint32(uint64(retSize), uint32(len(value)))
 	if err != nil {
-		return ResultInvalidMemoryAccess
+		return v1.WasmResultInvalidMemoryAccess
 	}
 
-	return ResultOk
+	return v1.WasmResultOk
 }
 
-func getContextHandler(instance common.WasmInstance) ContextHandler {
+func copyBytesIntoInstance(instance common.WasmInstance, value []byte, retPtr int32, retSize int32) v1.WasmResult {
+	addr, err := instance.Malloc(int32(len(value)))
+	if err != nil {
+		return v1.WasmResultInvalidMemoryAccess
+	}
+
+	err = instance.PutMemory(addr, uint64(len(value)), value)
+	if err != nil {
+		return v1.WasmResultInvalidMemoryAccess
+	}
+
+	err = instance.PutUint32(uint64(retPtr), uint32(addr))
+	if err != nil {
+		return v1.WasmResultInvalidMemoryAccess
+	}
+
+	err = instance.PutUint32(uint64(retSize), uint32(len(value)))
+	if err != nil {
+		return v1.WasmResultInvalidMemoryAccess
+	}
+
+	return v1.WasmResultOk
+}
+
+func getContextHandler(instance common.WasmInstance) v1.ContextHandler {
 	if v := instance.GetData(); v != nil {
-		if im, ok := v.(ContextHandler); ok {
+		if im, ok := v.(v1.ContextHandler); ok {
 			return im
 		}
 	}
@@ -60,12 +80,12 @@ func getContextHandler(instance common.WasmInstance) ContextHandler {
 	return nil
 }
 
-func getImportHandler(instance common.WasmInstance) ImportsHandler {
+func getImportHandler(instance common.WasmInstance) v1.ImportsHandler {
 	if ctx := getContextHandler(instance); ctx != nil {
 		if im := ctx.GetImports(); im != nil {
 			return im
 		}
 	}
 
-	return &DefaultImportsHandler{}
+	return &v1.DefaultImportsHandler{}
 }

@@ -18,7 +18,6 @@
 package v1
 
 import (
-	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -39,7 +38,6 @@ func (d *DefaultImportsHandler) GetVmConfig() common.IoBuffer { return nil }
 func (d *DefaultImportsHandler) GetPluginConfig() common.IoBuffer { return nil }
 
 func (d *DefaultImportsHandler) Log(level LogLevel, msg string) WasmResult {
-	fmt.Println(msg)
 	return WasmResultOk
 }
 
@@ -53,6 +51,7 @@ func (d *DefaultImportsHandler) SetTickPeriodMilliseconds(tickPeriodMilliseconds
 
 func (d *DefaultImportsHandler) GetCurrentTimeNanoseconds() (int32, WasmResult) {
 	nano := time.Now().Nanosecond()
+
 	return int32(nano), WasmResultOk
 }
 
@@ -202,8 +201,10 @@ func (s *sharedData) set(key string, value string, cas uint32) WasmResult {
 		if v.cas != cas {
 			return WasmResultCasMismatch
 		}
+
 		v.data = value
 		v.cas = atomic.AddUint32(&s.cas, 1)
+
 		return WasmResultOk
 	}
 

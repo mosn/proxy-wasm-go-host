@@ -18,100 +18,106 @@
 package v1
 
 import (
+	"context"
+
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
+	v1 "mosn.io/proxy-wasm-go-host/proxywasm/v1"
 )
 
-func GetBuffer(instance common.WasmInstance, bufferType BufferType) common.IoBuffer {
+func GetBuffer(instance common.WasmInstance, bufferType v1.BufferType) common.IoBuffer {
 	im := getImportHandler(instance)
 
 	switch bufferType {
-	case BufferTypeHttpRequestBody:
+	case v1.BufferTypeHttpRequestBody:
 		return im.GetHttpRequestBody()
-	case BufferTypeHttpResponseBody:
+	case v1.BufferTypeHttpResponseBody:
 		return im.GetHttpResponseBody()
-	case BufferTypeDownstreamData:
+	case v1.BufferTypeDownstreamData:
 		return im.GetDownStreamData()
-	case BufferTypeUpstreamData:
+	case v1.BufferTypeUpstreamData:
 		return im.GetUpstreamData()
-	case BufferTypeHttpCallResponseBody:
+	case v1.BufferTypeHttpCallResponseBody:
 		return im.GetHttpCallResponseBody()
-	case BufferTypeGrpcReceiveBuffer:
+	case v1.BufferTypeGrpcReceiveBuffer:
 		return im.GetGrpcReceiveBuffer()
-	case BufferTypePluginConfiguration:
+	case v1.BufferTypePluginConfiguration:
 		return im.GetPluginConfig()
-	case BufferTypeVmConfiguration:
+	case v1.BufferTypeVmConfiguration:
 		return im.GetVmConfig()
-	case BufferTypeCallData:
+	case v1.BufferTypeCallData:
 		return im.GetFuncCallData()
 	default:
 		return im.GetCustomBuffer(bufferType)
 	}
 }
 
-func ProxyGetBufferBytes(instance common.WasmInstance, bufferType int32, start int32, length int32, returnBufferData int32, returnBufferSize int32) int32 {
-	buf := GetBuffer(instance, BufferType(bufferType))
+func (h *host) ProxyGetBufferBytes(ctx context.Context, bufferType int32, start int32, length int32, returnBufferData int32, returnBufferSize int32) int32 {
+	instance := h.Instance
+	buf := GetBuffer(instance, v1.BufferType(bufferType))
 	if buf == nil {
-		return WasmResultNotFound.Int32()
+		return v1.WasmResultNotFound.Int32()
 	}
 
 	if start > start+length {
-		return WasmResultBadArgument.Int32()
+		return v1.WasmResultBadArgument.Int32()
 	}
 
 	if start+length > int32(buf.Len()) {
 		length = int32(buf.Len()) - start
 	}
 
-	addr, err := instance.Malloc(int32(length))
+	addr, err := instance.Malloc(length)
 	if err != nil {
-		return WasmResultInvalidMemoryAccess.Int32()
+		return v1.WasmResultInvalidMemoryAccess.Int32()
 	}
 
 	err = instance.PutMemory(addr, uint64(length), buf.Bytes())
 	if err != nil {
-		return WasmResultInternalFailure.Int32()
+		return v1.WasmResultInternalFailure.Int32()
 	}
 
 	err = instance.PutUint32(uint64(returnBufferData), uint32(addr))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess.Int32()
+		return v1.WasmResultInvalidMemoryAccess.Int32()
 	}
 
 	err = instance.PutUint32(uint64(returnBufferSize), uint32(length))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess.Int32()
+		return v1.WasmResultInvalidMemoryAccess.Int32()
 	}
 
-	return WasmResultOk.Int32()
+	return v1.WasmResultOk.Int32()
 }
 
-func ProxySetBufferBytes(instance common.WasmInstance, bufferType int32, start int32, length int32, dataPtr int32, dataSize int32) int32 {
-	buf := GetBuffer(instance, BufferType(bufferType))
+func (h *host) ProxySetBufferBytes(ctx context.Context, bufferType int32, start int32, length int32, dataPtr int32, dataSize int32) int32 {
+	instance := h.Instance
+	buf := GetBuffer(instance, v1.BufferType(bufferType))
 	if buf == nil {
-		return WasmResultNotFound.Int32()
+		return v1.WasmResultNotFound.Int32()
 	}
 
 	content, err := instance.GetMemory(uint64(dataPtr), uint64(dataSize))
 	if err != nil {
-		return WasmResultInvalidMemoryAccess.Int32()
+		return v1.WasmResultInvalidMemoryAccess.Int32()
 	}
 
-	if start == 0 {
+	switch {
+	case start == 0:
 		if length == 0 || int(length) >= buf.Len() {
 			buf.Drain(buf.Len())
 			_, err = buf.Write(content)
 		} else {
-			return WasmResultBadArgument.Int32()
+			return v1.WasmResultBadArgument.Int32()
 		}
-	} else if int(start) >= buf.Len() {
+	case int(start) >= buf.Len():
 		_, err = buf.Write(content)
-	} else {
-		return WasmResultBadArgument.Int32()
+	default:
+		return v1.WasmResultBadArgument.Int32()
 	}
 
 	if err != nil {
-		return WasmResultInternalFailure.Int32()
+		return v1.WasmResultInternalFailure.Int32()
 	}
 
-	return WasmResultOk.Int32()
+	return v1.WasmResultOk.Int32()
 }

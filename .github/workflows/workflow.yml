@@ -16,7 +16,7 @@ jobs:
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
         with:
-          golangci_lint_flags: "--enable-all --timeout=10m --exclude-use-default=false --tests=false --disable=gochecknoinits,gochecknoglobals,exhaustive,nakedret,exhaustivestruct"
+          golangci_lint_flags: "--enable-all --timeout=10m --exclude-use-default=false --tests=false --disable=gochecknoinits,gochecknoglobals,exhaustive,nakedret,exhaustivestruct,funlen,godot,golint,lll,varnamelen,revive,stylecheck,ireturn,stylecheck,nosnakecase,interfacebloat,nonamedreturns,wsl,cyclop,exhaustruct,forcetypeassert,wrapcheck"
           workdir: proxywasm
 
   build:

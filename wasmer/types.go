@@ -21,6 +21,7 @@ import (
 	"reflect"
 
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
+	"mosn.io/mosn/pkg/log"
 )
 
 func convertFromGoType(t reflect.Type) *wasmerGo.ValueType {
@@ -33,6 +34,8 @@ func convertFromGoType(t reflect.Type) *wasmerGo.ValueType {
 		return wasmerGo.NewValueType(wasmerGo.F32)
 	case reflect.Float64:
 		return wasmerGo.NewValueType(wasmerGo.F64)
+	default:
+		log.DefaultLogger.Errorf("[wasmer][type] convertFromGoType unsupported type: %v", t.Kind().String())
 	}
 
 	return nil
@@ -63,6 +66,8 @@ func convertFromGoValue(val reflect.Value) wasmerGo.Value {
 		return wasmerGo.NewF32(float32(val.Float()))
 	case reflect.Float64:
 		return wasmerGo.NewF64(float64(val.Float()))
+	default:
+		log.DefaultLogger.Errorf("[wasmer][type] convertFromGoValue unsupported val type: %v", val.Kind().String())
 	}
 
 	return wasmerGo.Value{}

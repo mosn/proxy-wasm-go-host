@@ -21,29 +21,32 @@ import (
 	"encoding/binary"
 )
 
+// u32 is the fixed size of a uint32 in little-endian encoding.
+const u32Len = 4
+
 // EncodeMap encode map into bytes.
 func EncodeMap(m map[string]string) []byte {
 	if len(m) == 0 {
 		return nil
 	}
 
-	totalBytesLen := 4
+	totalBytesLen := u32Len
 	for k, v := range m {
-		totalBytesLen += 4 + 4
+		totalBytesLen += u32Len + u32Len
 		totalBytesLen += len(k) + 1 + len(v) + 1
 	}
 
 	b := make([]byte, totalBytesLen)
 	binary.LittleEndian.PutUint32(b, uint32(len(m)))
 
-	lenPtr := 4
-	dataPtr := lenPtr + 8*len(m)
+	lenPtr := u32Len
+	dataPtr := lenPtr + (u32Len+u32Len)*len(m)
 
 	for k, v := range m {
 		binary.LittleEndian.PutUint32(b[lenPtr:], uint32(len(k)))
-		lenPtr += 4
+		lenPtr += u32Len
 		binary.LittleEndian.PutUint32(b[lenPtr:], uint32(len(v)))
-		lenPtr += 4
+		lenPtr += u32Len
 
 		copy(b[dataPtr:], k)
 		dataPtr += len(k)
@@ -61,13 +64,14 @@ func EncodeMap(m map[string]string) []byte {
 
 // DecodeMap decode map from rawData.
 func DecodeMap(rawData []byte) map[string]string {
-	if len(rawData) < 4 {
+	if len(rawData) < u32Len {
 		return nil
 	}
 
-	headerSize := binary.LittleEndian.Uint32(rawData[0:4])
+	headerSize := binary.LittleEndian.Uint32(rawData[0:u32Len])
 
-	dataPtr := 4 + (4+4)*int(headerSize) // headerSize + (key1_size + value1_size) * headerSize
+	// headerSize + (key1_size + value1_size) * headerSize
+	dataPtr := u32Len + (u32Len+u32Len)*int(headerSize)
 	if dataPtr >= len(rawData) {
 		return nil
 	}
@@ -75,9 +79,9 @@ func DecodeMap(rawData []byte) map[string]string {
 	res := make(map[string]string, headerSize)
 
 	for i := 0; i < int(headerSize); i++ {
-		lenIndex := 4 + (4+4)*i
-		keySize := int(binary.LittleEndian.Uint32(rawData[lenIndex : lenIndex+4]))
-		valueSize := int(binary.LittleEndian.Uint32(rawData[lenIndex+4 : lenIndex+8]))
+		lenIndex := u32Len + (u32Len+u32Len)*i
+		keySize := int(binary.LittleEndian.Uint32(rawData[lenIndex : lenIndex+u32Len]))
+		valueSize := int(binary.LittleEndian.Uint32(rawData[lenIndex+u32Len : lenIndex+u32Len+u32Len]))
 
 		if dataPtr >= len(rawData) || dataPtr+keySize > len(rawData) {
 			break

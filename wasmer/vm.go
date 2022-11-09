@@ -19,6 +19,7 @@ package wasmer
 
 import (
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
+	"mosn.io/mosn/pkg/log"
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 
@@ -50,6 +51,7 @@ func (w *VM) NewModule(wasmBytes []byte) common.WasmModule {
 
 	m, err := wasmerGo.NewModule(w.store, wasmBytes)
 	if err != nil {
+		log.DefaultLogger.Errorf("[wasmer][vm] fail to new module, err: %v", err)
 		return nil
 	}
 
