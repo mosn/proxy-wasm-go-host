@@ -59,7 +59,7 @@ const (
 	MetricTypeHistogram MetricType = 3
 )
 
-type MapType int32
+type MapType = int32
 
 const (
 	MapTypeHttpRequestHeaders       MapType = 0

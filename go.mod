@@ -4,7 +4,8 @@ go 1.17
 
 require (
 	github.com/golang/mock v1.6.0
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.8.0
+	github.com/tetratelabs/wabin v0.0.0-20220927005300-3b0fbf39a46a
 	github.com/wasmerio/wasmer-go v1.0.4
 	mosn.io/mosn v1.2.0
 	mosn.io/pkg v1.2.1
@@ -23,6 +24,6 @@ require (
 	golang.org/x/text v0.3.4 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	mosn.io/api v1.2.1 // indirect
 )

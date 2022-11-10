@@ -119,6 +119,7 @@ type Exports interface {
 	// context
 	ProxyOnContextCreate(contextID int32, parentContextID int32, contextType ContextType) error
 	ProxyOnDone(contextID int32) (int32, error)
+	ProxyOnDelete(contextID int32) error
 
 	// configuration
 	ProxyOnVmStart(vmID int32, vmConfigurationSize int32) (int32, error)
