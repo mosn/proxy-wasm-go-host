@@ -18,46 +18,31 @@
  * limitations under the License.
  */
 
-package wasmer
+package e2e
 
 import (
-	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
-	"mosn.io/mosn/pkg/log"
+	_ "embed"
+	"testing"
 
-	"mosn.io/proxy-wasm-go-host/proxywasm/common"
+	"mosn.io/proxy-wasm-go-host/wasmer"
 )
 
-type VM struct {
-	engine *wasmerGo.Engine
-	store  *wasmerGo.Store
+func TestStartABIContextV1_wasmer(t *testing.T) {
+	testStartABIContextV1(t, wasmer.NewInstanceFromBinary)
 }
 
-func NewWasmerVM() common.WasmVM {
-	vm := &VM{}
-	vm.Init()
-
-	return vm
+func TestStartABIContextV2_wasmer(t *testing.T) {
+	testStartABIContextV2(t, wasmer.NewInstanceFromBinary)
 }
 
-func (w *VM) Name() string {
-	return "wasmer"
+func TestAddRequestHeaderV1_wasmer(t *testing.T) {
+	instance := wasmer.NewInstanceFromBinary(binAddRequestHeaderV1)
+	defer instance.Stop()
+	testV1(t, instance, testAddRequestHeaderV1)
 }
 
-func (w *VM) Init() {
-	w.engine = wasmerGo.NewEngine()
-	w.store = wasmerGo.NewStore(w.engine)
-}
-
-func (w *VM) NewModule(wasmBytes []byte) common.WasmModule {
-	if len(wasmBytes) == 0 {
-		return nil
-	}
-
-	m, err := wasmerGo.NewModule(w.store, wasmBytes)
-	if err != nil {
-		log.DefaultLogger.Errorf("[wasmer][vm] fail to new module, err: %v", err)
-		return nil
-	}
-
-	return NewWasmerModule(w, m, wasmBytes)
+func TestAddRequestHeaderV2_wasmer(t *testing.T) {
+	instance := wasmer.NewInstanceFromBinary(binAddRequestHeaderV2)
+	defer instance.Stop()
+	testV2(t, instance, testAddRequestHeaderV2)
 }

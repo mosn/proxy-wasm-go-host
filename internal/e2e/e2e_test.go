@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package wasm
+package e2e
 
 import (
 	_ "embed"
@@ -23,14 +23,20 @@ import (
 	"strconv"
 	"testing"
 
+	"mosn.io/pkg/log"
+
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 	v1 "mosn.io/proxy-wasm-go-host/proxywasm/v1"
 	v2 "mosn.io/proxy-wasm-go-host/proxywasm/v2"
-	"mosn.io/proxy-wasm-go-host/wasmer"
+	"mosn.io/proxy-wasm-go-host/wazero"
 )
 
-func TestStartABIContextV1_wasmer(t *testing.T) {
-	testStartABIContextV1(t, wasmer.NewInstanceFromBinary)
+func init() {
+	log.DefaultLogger.SetLogLevel(log.ERROR)
+}
+
+func TestStartABIContextV1_wazero(t *testing.T) {
+	testStartABIContextV1(t, wazero.NewInstanceFromBinary)
 }
 
 func testStartABIContextV1(t *testing.T, newInstance func([]byte) common.WasmInstance) {
@@ -58,8 +64,8 @@ func startABIContextV1(instance common.WasmInstance) (wasmCtx *v1.ABIContext, er
 	return
 }
 
-func TestAddRequestHeaderV1_wasmer(t *testing.T) {
-	instance := wasmer.NewInstanceFromBinary(binAddRequestHeaderV1)
+func TestAddRequestHeaderV1_wazero(t *testing.T) {
+	instance := wazero.NewInstanceFromBinary(binAddRequestHeaderV1)
 	defer instance.Stop()
 	testV1(t, instance, testAddRequestHeaderV1)
 }
@@ -132,8 +138,8 @@ func (im *headersHandlerV1) GetHttpRequestHeader() common.HeaderMap {
 	return im.reqHeader
 }
 
-func TestStartABIContextV2_wasmer(t *testing.T) {
-	testStartABIContextV2(t, wasmer.NewInstanceFromBinary)
+func TestStartABIContextV2_wazero(t *testing.T) {
+	testStartABIContextV2(t, wazero.NewInstanceFromBinary)
 }
 
 func testStartABIContextV2(t *testing.T, newInstance func([]byte) common.WasmInstance) {
@@ -161,8 +167,8 @@ func startABIContextV2(instance common.WasmInstance) (wasmCtx *v2.ABIContext, er
 	return
 }
 
-func TestAddRequestHeaderV2_wasmer(t *testing.T) {
-	instance := wasmer.NewInstanceFromBinary(binAddRequestHeaderV2)
+func TestAddRequestHeaderV2_wazero(t *testing.T) {
+	instance := wazero.NewInstanceFromBinary(binAddRequestHeaderV2)
 	defer instance.Stop()
 	testV2(t, instance, testAddRequestHeaderV2)
 }

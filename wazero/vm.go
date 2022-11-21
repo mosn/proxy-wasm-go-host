@@ -1,6 +1,3 @@
-//go:build wasmer
-// +build wasmer
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,21 +15,21 @@
  * limitations under the License.
  */
 
-package wasmer
+package wazero
 
 import (
-	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
-	"mosn.io/mosn/pkg/log"
+	"context"
+
+	wazero "github.com/tetratelabs/wazero"
 
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 
 type VM struct {
-	engine *wasmerGo.Engine
-	store  *wasmerGo.Store
+	runtime wazero.Runtime
 }
 
-func NewWasmerVM() common.WasmVM {
+func NewVM() common.WasmVM {
 	vm := &VM{}
 	vm.Init()
 
@@ -40,12 +37,13 @@ func NewWasmerVM() common.WasmVM {
 }
 
 func (w *VM) Name() string {
-	return "wasmer"
+	return "wazero"
 }
 
+var ctx = context.Background()
+
 func (w *VM) Init() {
-	w.engine = wasmerGo.NewEngine()
-	w.store = wasmerGo.NewStore(w.engine)
+	w.runtime = wazero.NewRuntime(ctx)
 }
 
 func (w *VM) NewModule(wasmBytes []byte) common.WasmModule {
@@ -53,11 +51,10 @@ func (w *VM) NewModule(wasmBytes []byte) common.WasmModule {
 		return nil
 	}
 
-	m, err := wasmerGo.NewModule(w.store, wasmBytes)
+	m, err := w.runtime.CompileModule(ctx, wasmBytes)
 	if err != nil {
-		log.DefaultLogger.Errorf("[wasmer][vm] fail to new module, err: %v", err)
 		return nil
 	}
 
-	return NewWasmerModule(w, m, wasmBytes)
+	return NewModule(w, m, wasmBytes)
 }
