@@ -18,6 +18,8 @@
 package wazero
 
 import (
+	"strings"
+
 	wazero "github.com/tetratelabs/wazero"
 
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
@@ -50,5 +52,15 @@ func (w *Module) NewInstance() common.WasmInstance {
 }
 
 func (w *Module) GetABINameList() []string {
-	return nil
+	abiNameList := make([]string, 0)
+
+	exportList := w.module.ExportedFunctions()
+
+	for export := range exportList {
+		if strings.HasPrefix(export, "proxy_abi") {
+			abiNameList = append(abiNameList, export)
+		}
+	}
+
+	return abiNameList
 }

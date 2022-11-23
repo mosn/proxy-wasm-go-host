@@ -28,6 +28,9 @@ import (
 	"github.com/tetratelabs/wazero/api"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 	"mosn.io/mosn/pkg/log"
+	"mosn.io/mosn/pkg/types"
+	"mosn.io/mosn/pkg/wasm/abi"
+	"mosn.io/pkg/utils"
 
 	importsv1 "mosn.io/proxy-wasm-go-host/internal/imports/v1"
 	importsv2 "mosn.io/proxy-wasm-go-host/internal/imports/v2"
@@ -45,7 +48,9 @@ type Instance struct {
 	vm     *VM
 	module *Module
 
-	instance api.Module
+	namespace wazero.Namespace
+	instance  api.Module
+	abiList   []types.ABI
 
 	lock     sync.Mutex
 	started  uint32
@@ -59,33 +64,18 @@ type Instance struct {
 type InstanceOptions func(instance *Instance)
 
 func NewInstance(vm *VM, module *Module, options ...InstanceOptions) *Instance {
-	r := vm.runtime
-
+	// Here, we initialize an empty namespace as imports are defined prior to start.
 	ins := &Instance{
-		vm:     vm,
-		module: module,
-		lock:   sync.Mutex{},
+		vm:        vm,
+		module:    module,
+		namespace: vm.runtime.NewNamespace(ctx),
+		lock:      sync.Mutex{},
 	}
+
 	ins.stopCond = sync.NewCond(&ins.lock)
 
 	for _, option := range options {
 		option(ins)
-	}
-
-	if _, err := wasi_snapshot_preview1.Instantiate(ctx, r); err != nil {
-		_ = r.Close(ctx)
-		log.DefaultLogger.Warnf("[wazero][instance] NewInstance fail to create wasi_snapshot_preview1 env, err: %v", err)
-		panic(err)
-	}
-
-	// Instantiate WASI also under the unstable name for old compilers,
-	// such as TinyGo 0.19 used for v1 ABI.
-	wasiBuilder := r.NewHostModuleBuilder("wasi_unstable")
-	wasi_snapshot_preview1.NewFunctionExporter().ExportFunctions(wasiBuilder)
-	if _, err := wasiBuilder.Instantiate(ctx, r); err != nil {
-		log.DefaultLogger.Warnf("[wazero][instance] NewInstance fail to create wasi_unstable env, err: %v", err)
-		_ = r.Close(ctx)
-		panic(err)
 	}
 
 	return ins
@@ -136,14 +126,35 @@ func (i *Instance) GetModule() common.WasmModule {
 	return i.module
 }
 
+// Start makes a new namespace which has the module dependencies of the guest.
 func (i *Instance) Start() error {
 	ctx := context.Background()
+	r := i.vm.runtime
+	ns := i.namespace
 
-	ins, err := i.vm.runtime.InstantiateModule(ctx, i.module.module, wazero.NewModuleConfig())
+	if _, err := wasi_snapshot_preview1.NewBuilder(r).Instantiate(ctx, ns); err != nil {
+		ns.Close(ctx)
+		log.DefaultLogger.Warnf("[wazero][instance] Start fail to create wasi_snapshot_preview1 env, err: %v", err)
+		panic(err)
+	}
+
+	i.abiList = abi.GetABIList(i)
+
+	// Instantiate any ABI needed by the guest.
+	for _, abi := range i.abiList {
+		abi.OnInstanceCreate(i)
+	}
+
+	ins, err := ns.InstantiateModule(ctx, i.module.module, wazero.NewModuleConfig())
 	if err != nil {
+		ns.Close(ctx)
 		log.DefaultLogger.Errorf("[wazero][instance] Start failed to instantiate module, err: %v", err)
-		i.vm.runtime.Close(ctx)
 		return err
+	}
+
+	// Handle any ABI requirements after the guest is instantiated.
+	for _, abi := range i.abiList {
+		abi.OnInstanceStart(i)
 	}
 
 	i.instance = ins
@@ -154,15 +165,24 @@ func (i *Instance) Start() error {
 }
 
 func (i *Instance) Stop() {
-	go func() {
+	utils.GoWithRecover(func() {
 		i.lock.Lock()
 		for i.refCount > 0 {
 			i.stopCond.Wait()
 		}
-		i.vm.runtime.Close(context.Background())
-		_ = atomic.CompareAndSwapUint32(&i.started, 1, 0)
+		swapped := atomic.CompareAndSwapUint32(&i.started, 1, 0)
 		i.lock.Unlock()
-	}()
+
+		if swapped {
+			for _, abi := range i.abiList {
+				abi.OnInstanceDestroy(i)
+			}
+		}
+
+		if ns := i.namespace; ns != nil {
+			ns.Close(ctx)
+		}
+	}, nil)
 }
 
 // return true is Instance is started, false if not started.
@@ -177,6 +197,9 @@ func (i *Instance) RegisterImports(abiName string) error {
 		return ErrInstanceAlreadyStart
 	}
 
+	r := i.vm.runtime
+	ns := i.namespace
+
 	// proxy-wasm cannot run multiple ABI in the same instance because the ABI
 	// collides. They all use the same module name: "env"
 	module := "env"
@@ -185,18 +208,28 @@ func (i *Instance) RegisterImports(abiName string) error {
 	switch abiName {
 	case v1.ProxyWasmABI_0_1_0:
 		hostFunctions = importsv1.HostFunctions
+
+		// Instantiate WASI also under the unstable name for old compilers,
+		// such as TinyGo 0.19 used for v1 ABI.
+		wasiBuilder := r.NewHostModuleBuilder("wasi_unstable")
+		wasi_snapshot_preview1.NewFunctionExporter().ExportFunctions(wasiBuilder)
+		if _, err := wasiBuilder.Instantiate(ctx, ns); err != nil {
+			ns.Close(ctx)
+			log.DefaultLogger.Warnf("[wazero][instance] RegisterImports fail to create wasi_unstable env, err: %v", err)
+			panic(err)
+		}
 	case v2.ProxyWasmABI_0_2_0:
 		hostFunctions = importsv2.HostFunctions
 	default:
 		return fmt.Errorf("unknown ABI: %s", abiName)
 	}
 
-	b := i.vm.runtime.NewHostModuleBuilder(module)
+	b := r.NewHostModuleBuilder(module)
 	for n, f := range hostFunctions(i) {
 		b.NewFunctionBuilder().WithFunc(f).Export(n)
 	}
 
-	if _, err := b.Instantiate(ctx, i.vm.runtime); err != nil {
+	if _, err := b.Instantiate(ctx, ns); err != nil {
 		log.DefaultLogger.Errorf("[wazero][instance] RegisterImports failed to instantiate ABI %s, err: %v", abiName, err)
 		return err
 	}
@@ -228,6 +261,9 @@ func (i *Instance) GetExportsFunc(funcName string) (common.WasmFunction, error) 
 	}
 
 	wf := i.instance.ExportedFunction(funcName)
+	if wf == nil {
+		return nil, fmt.Errorf("[wazero][instance] GetExportsFunc unknown func %s", funcName)
+	}
 	f := &wasmFunction{fn: wf}
 	if rts := wf.Definition().ResultTypes(); len(rts) > 0 {
 		f.rt = rts[0]
@@ -244,13 +280,10 @@ type wasmFunction struct {
 func (f *wasmFunction) Call(args ...interface{}) (interface{}, error) {
 	realArgs := make([]uint64, 0, len(args))
 	for _, a := range args {
-		switch a := a.(type) {
-		case int32:
-			realArgs = append(realArgs, api.EncodeI32(a))
-		case int64:
-			realArgs = append(realArgs, api.EncodeI64(a))
-		default:
-			panic(fmt.Errorf("unexpected arg type %v", a))
+		if _, v, err := convertFromGoValue(a); err != nil {
+			return nil, err
+		} else {
+			realArgs = append(realArgs, v)
 		}
 	}
 	if ret, err := f.fn.Call(ctx, realArgs...); err != nil {
@@ -258,15 +291,7 @@ func (f *wasmFunction) Call(args ...interface{}) (interface{}, error) {
 	} else if len(ret) == 0 {
 		return nil, nil
 	} else {
-		v := ret[0]
-		switch f.rt {
-		case api.ValueTypeI32:
-			return int32(v), nil
-		case api.ValueTypeI64:
-			return int64(v), nil
-		default:
-			panic(fmt.Errorf("unexpected result type %v", f.rt))
-		}
+		return convertToGoValue(f.rt, ret[0])
 	}
 }
 
@@ -276,8 +301,8 @@ func (i *Instance) GetExportsMem(memName string) ([]byte, error) {
 	}
 
 	ctx := context.Background()
-	size := i.instance.ExportedMemory(memName).Size(ctx) * 65536
-	return i.GetMemory(0, uint64(size))
+	mem := i.instance.ExportedMemory(memName)
+	return i.GetMemory(0, uint64(mem.Size(ctx)))
 }
 
 func (i *Instance) GetMemory(addr uint64, size uint64) ([]byte, error) {
@@ -285,7 +310,7 @@ func (i *Instance) GetMemory(addr uint64, size uint64) ([]byte, error) {
 	mem := i.instance.Memory()
 	ret, ok := mem.Read(ctx, uint32(addr), uint32(size))
 	if !ok { // unexpected
-		return nil, fmt.Errorf("unable to read %d bytes", size)
+		return nil, fmt.Errorf("[wazero][instance] GetMemory unable to read %d bytes", size)
 	}
 	return ret, nil
 }

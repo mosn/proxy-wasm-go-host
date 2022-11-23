@@ -108,7 +108,15 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+var vm common.WasmVM
+
 func main() {
+	defer func() {
+		if vm != nil {
+			vm.Close()
+		}
+	}()
+
 	// create root context id
 	rootContextID = atomic.AddInt32(&contextIDGenerator, 1)
 
@@ -129,7 +137,11 @@ func getWasmContext() *v1.ABIContext {
 			log.Panicln(err)
 		}
 
-		instance := wazero.NewInstanceFromBinary(guest)
+		vm = wazero.NewVM()
+
+		module := vm.NewModule(guest)
+
+		instance := module.NewInstance()
 
 		// create ABI context
 		wasmCtx = &v1.ABIContext{

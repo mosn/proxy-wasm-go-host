@@ -61,3 +61,11 @@ func (w *VM) NewModule(wasmBytes []byte) common.WasmModule {
 
 	return NewWasmerModule(w, m, wasmBytes)
 }
+
+// Close implements io.Closer
+func (w *VM) Close() (err error) {
+	if s := w.store; s != nil {
+		s.Close()
+	}
+	return
+}

@@ -27,6 +27,9 @@ type WasmVM interface {
 
 	// NewModule compiles the 'guest' into a wasm module
 	NewModule(guest []byte) WasmModule
+
+	// Close avoids leaking resources such as memory-mapped files.
+	Close() error
 }
 
 // WasmModule represents the wasm module

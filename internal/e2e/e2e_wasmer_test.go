@@ -28,21 +28,29 @@ import (
 )
 
 func TestStartABIContextV1_wasmer(t *testing.T) {
-	testStartABIContextV1(t, wasmer.NewInstanceFromBinary)
+	vm := wasmer.NewWasmerVM()
+	defer vm.Close()
+
+	testStartABIContextV1(t, vm)
 }
 
 func TestStartABIContextV2_wasmer(t *testing.T) {
-	testStartABIContextV2(t, wasmer.NewInstanceFromBinary)
+	vm := wasmer.NewWasmerVM()
+	defer vm.Close()
+
+	testStartABIContextV2(t, vm)
 }
 
 func TestAddRequestHeaderV1_wasmer(t *testing.T) {
-	instance := wasmer.NewInstanceFromBinary(binAddRequestHeaderV1)
-	defer instance.Stop()
-	testV1(t, instance, testAddRequestHeaderV1)
+	vm := wasmer.NewWasmerVM()
+	defer vm.Close()
+
+	testV1(t, vm, testAddRequestHeaderV1)
 }
 
 func TestAddRequestHeaderV2_wasmer(t *testing.T) {
-	instance := wasmer.NewInstanceFromBinary(binAddRequestHeaderV2)
-	defer instance.Stop()
-	testV2(t, instance, testAddRequestHeaderV2)
+	vm := wasmer.NewWasmerVM()
+	defer vm.Close()
+
+	testV2(t, vm, testAddRequestHeaderV2)
 }

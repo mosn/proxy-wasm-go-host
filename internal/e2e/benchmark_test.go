@@ -34,26 +34,38 @@ func init() {
 }
 
 func BenchmarkStartABIContextV1_wazero(b *testing.B) {
-	benchmarkStartABIContextV1(b, wazero.NewInstanceFromBinary)
+	vm := wazero.NewVM()
+	defer vm.Close()
+
+	benchmarkStartABIContextV1(b, vm)
 }
 
-func benchmarkStartABIContextV1(b *testing.B, newInstance func([]byte) common.WasmInstance) {
+func benchmarkStartABIContextV1(b *testing.B, vm common.WasmVM) {
+	module := vm.NewModule(binAddRequestHeaderV1)
+
 	for i := 0; i < b.N; i++ {
-		if wasmCtx, err := startABIContextV1(newInstance(binAddRequestHeaderV1)); err != nil {
+		instance := module.NewInstance()
+
+		if _, err := startABIContextV1(instance); err != nil {
 			b.Fatal(err)
 		} else {
-			wasmCtx.Instance.Stop()
+			instance.Stop()
 		}
 	}
 }
 
 func BenchmarkAddRequestHeaderV1_wazero(b *testing.B) {
-	benchmarkAddRequestHeaderV1(b, wazero.NewInstanceFromBinary)
+	vm := wazero.NewVM()
+	defer vm.Close()
+
+	benchmarkAddRequestHeaderV1(b, vm)
 }
 
-func benchmarkAddRequestHeaderV1(b *testing.B, newInstance func([]byte) common.WasmInstance) {
-	instance := newInstance(binAddRequestHeaderV1)
+func benchmarkAddRequestHeaderV1(b *testing.B, vm common.WasmVM) {
+	module := vm.NewModule(binAddRequestHeaderV1)
+	instance := module.NewInstance()
 	defer instance.Stop()
+
 	benchmarkV1(b, instance, testAddRequestHeaderV1)
 }
 
@@ -99,25 +111,36 @@ func benchmarkV1(b *testing.B, instance common.WasmInstance, testV1 func(wasmCtx
 }
 
 func BenchmarkStartABIContextV2_wazero(b *testing.B) {
-	benchmarkStartABIContextV2(b, wazero.NewInstanceFromBinary)
+	vm := wazero.NewVM()
+	defer vm.Close()
+
+	benchmarkStartABIContextV2(b, vm)
 }
 
-func benchmarkStartABIContextV2(b *testing.B, newInstance func([]byte) common.WasmInstance) {
+func benchmarkStartABIContextV2(b *testing.B, vm common.WasmVM) {
+	module := vm.NewModule(binAddRequestHeaderV2)
+
 	for i := 0; i < b.N; i++ {
-		if wasmCtx, err := startABIContextV2(newInstance(binAddRequestHeaderV2)); err != nil {
+		instance := module.NewInstance()
+
+		if _, err := startABIContextV2(instance); err != nil {
 			b.Fatal(err)
 		} else {
-			wasmCtx.Instance.Stop()
+			instance.Stop()
 		}
 	}
 }
 
 func BenchmarkAddRequestHeaderV2_wazero(b *testing.B) {
-	benchmarkAddRequestHeaderV2(b, wazero.NewInstanceFromBinary)
+	vm := wazero.NewVM()
+	defer vm.Close()
+
+	benchmarkAddRequestHeaderV2(b, vm)
 }
 
-func benchmarkAddRequestHeaderV2(b *testing.B, newInstance func([]byte) common.WasmInstance) {
-	instance := newInstance(binAddRequestHeaderV2)
+func benchmarkAddRequestHeaderV2(b *testing.B, vm common.WasmVM) {
+	module := vm.NewModule(binAddRequestHeaderV2)
+	instance := module.NewInstance()
 	defer instance.Stop()
 	benchmarkV2(b, instance, testAddRequestHeaderV2)
 }

@@ -18,15 +18,36 @@
 package wazero
 
 import (
-	"mosn.io/proxy-wasm-go-host/proxywasm/common"
+	"math"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/tetratelabs/wazero/api"
 )
 
-func NewInstanceFromBinary(wasmBytes []byte) common.WasmInstance {
-	vm := NewVM()
+func TestTypes(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    interface{}
+		expected api.ValueType
+	}{
+		{name: "int32", input: int32(math.MinInt32), expected: api.ValueTypeI32},
+		{name: "int64", input: int64(math.MinInt64), expected: api.ValueTypeI64},
+		{name: "float32", input: float32(math.MaxFloat32), expected: api.ValueTypeF32},
+		{name: "float64", input: math.MaxFloat64, expected: api.ValueTypeF64},
+	}
 
-	module := vm.NewModule(wasmBytes)
+	for _, tt := range tests {
+		tc := tt
 
-	instance := module.NewInstance()
+		t.Run(tc.name, func(t *testing.T) {
+			vt, v, err := convertFromGoValue(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, vt, tc.expected)
 
-	return instance
+			g, err := convertToGoValue(vt, v)
+			require.NoError(t, err)
+			require.Equal(t, g, tc.input)
+		})
+	}
 }

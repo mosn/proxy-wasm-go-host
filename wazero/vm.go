@@ -48,13 +48,21 @@ func (w *VM) Init() {
 
 func (w *VM) NewModule(wasmBytes []byte) common.WasmModule {
 	if len(wasmBytes) == 0 {
-		return nil
+		panic("wasm was empty")
 	}
 
 	m, err := w.runtime.CompileModule(ctx, wasmBytes)
 	if err != nil {
-		return nil
+		panic(err)
 	}
 
 	return NewModule(w, m, wasmBytes)
+}
+
+// Close implements io.Closer
+func (w *VM) Close() (err error) {
+	if r := w.runtime; r != nil {
+		err = r.Close(ctx)
+	}
+	return
 }
