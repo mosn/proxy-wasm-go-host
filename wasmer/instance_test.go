@@ -37,10 +37,13 @@ import (
 
 func TestRegisterImports(t *testing.T) {
 	vm := NewWasmerVM()
+	defer vm.Close()
+
 	assert.Equal(t, vm.Name(), "wasmer")
 
 	module := vm.NewModule([]byte(`(module (func (export "_start")))`))
 	ins := module.NewInstance().(*Instance)
+	defer ins.Stop()
 
 	assert.Nil(t, ins.RegisterImports(v1.ProxyWasmABI_0_1_0))
 	assert.Nil(t, ins.Start())
@@ -49,10 +52,13 @@ func TestRegisterImports(t *testing.T) {
 
 func Test_registerFunc(t *testing.T) {
 	vm := NewWasmerVM()
+	defer vm.Close()
+
 	assert.Equal(t, vm.Name(), "wasmer")
 
 	module := vm.NewModule([]byte(`(module (func (export "_start")))`))
 	ins := module.NewInstance().(*Instance)
+	defer ins.Stop()
 
 	// invalid namespace
 	assert.Equal(t, ins.registerFunc("", "funcName", nil), ErrInvalidParam)
@@ -75,6 +81,8 @@ func Test_registerFunc(t *testing.T) {
 
 func Test_registerFuncRecoverPanic(t *testing.T) {
 	vm := NewWasmerVM()
+	defer vm.Close()
+
 	module := vm.NewModule([]byte(`
 			(module
 				(import "TestRegisterFuncRecover" "somePanic" (func $somePanic (result i32)))
@@ -83,6 +91,7 @@ func Test_registerFuncRecoverPanic(t *testing.T) {
 					call $somePanic))
 	`))
 	ins := module.NewInstance().(*Instance)
+	defer ins.Stop()
 
 	assert.Nil(t, ins.registerFunc("TestRegisterFuncRecover", "somePanic", func(context.Context) int32 {
 		panic("some panic")
@@ -100,12 +109,15 @@ func Test_registerFuncRecoverPanic(t *testing.T) {
 
 func TestInstanceMalloc(t *testing.T) {
 	vm := NewWasmerVM()
+	defer vm.Close()
+
 	module := vm.NewModule([]byte(`
 			(module
 				(func (export "_start"))
 				(func (export "malloc") (param i32) (result i32) i32.const 10))
 	`))
 	ins := module.NewInstance().(*Instance)
+	defer ins.Stop()
 
 	assert.Nil(t, ins.registerFunc("TestRegisterFuncRecover", "somePanic", func(instance types.WasmInstance) int32 {
 		panic("some panic")
@@ -120,8 +132,12 @@ func TestInstanceMalloc(t *testing.T) {
 
 func TestInstanceMem(t *testing.T) {
 	vm := NewWasmerVM()
+	defer vm.Close()
+
 	module := vm.NewModule([]byte(`(module (memory (export "memory") 1) (func (export "_start")))`))
 	ins := module.NewInstance()
+	defer ins.Stop()
+
 	assert.Nil(t, ins.Start())
 
 	m, err := ins.GetExportsMem("memory")
@@ -147,11 +163,15 @@ func TestInstanceMem(t *testing.T) {
 
 func TestInstanceData(t *testing.T) {
 	vm := NewWasmerVM()
+	defer vm.Close()
+
 	module := vm.NewModule([]byte(`
 			(module
 				(func (export "_start")))
 	`))
 	ins := module.NewInstance()
+	defer ins.Stop()
+
 	assert.Nil(t, ins.Start())
 
 	var data int = 1
@@ -195,6 +215,8 @@ func TestRefCount(t *testing.T) {
 	})
 
 	vm := NewWasmerVM()
+	defer vm.Close()
+
 	module := vm.NewModule([]byte(`(module (func (export "_start")))`))
 	ins := NewWasmerInstance(vm.(*VM), module.(*Module))
 

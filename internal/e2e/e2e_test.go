@@ -36,14 +36,19 @@ func init() {
 }
 
 func TestStartABIContextV1_wazero(t *testing.T) {
-	testStartABIContextV1(t, wazero.NewInstanceFromBinary)
+	vm := wazero.NewVM()
+	defer vm.Close()
+
+	testStartABIContextV1(t, vm)
 }
 
-func testStartABIContextV1(t *testing.T, newInstance func([]byte) common.WasmInstance) {
-	if wasmCtx, err := startABIContextV1(newInstance(binAddRequestHeaderV1)); err != nil {
+func testStartABIContextV1(t *testing.T, vm common.WasmVM) {
+	module := vm.NewModule(binAddRequestHeaderV1)
+	instance := module.NewInstance()
+	defer instance.Stop()
+
+	if _, err := startABIContextV1(instance); err != nil {
 		t.Fatal(err)
-	} else {
-		wasmCtx.Instance.Stop()
 	}
 }
 
@@ -53,21 +58,19 @@ func startABIContextV1(instance common.WasmInstance) (wasmCtx *v1.ABIContext, er
 
 	// register ABI imports into the wasm vm instance
 	if err = instance.RegisterImports(wasmCtx.Name()); err != nil {
-		instance.Stop()
 		return
 	}
 
 	// start the wasm vm instance
-	if err = instance.Start(); err != nil {
-		instance.Stop()
-	}
+	err = instance.Start()
 	return
 }
 
 func TestAddRequestHeaderV1_wazero(t *testing.T) {
-	instance := wazero.NewInstanceFromBinary(binAddRequestHeaderV1)
-	defer instance.Stop()
-	testV1(t, instance, testAddRequestHeaderV1)
+	vm := wazero.NewVM()
+	defer vm.Close()
+
+	testV1(t, vm, testAddRequestHeaderV1)
 }
 
 func testAddRequestHeaderV1(wasmCtx *v1.ABIContext, contextID int32) error {
@@ -88,7 +91,11 @@ func testAddRequestHeaderV1(wasmCtx *v1.ABIContext, contextID int32) error {
 	return nil
 }
 
-func testV1(t *testing.T, instance common.WasmInstance, test func(wasmCtx *v1.ABIContext, contextID int32) error) {
+func testV1(t *testing.T, vm common.WasmVM, test func(wasmCtx *v1.ABIContext, contextID int32) error) {
+	module := vm.NewModule(binAddRequestHeaderV1)
+	instance := module.NewInstance()
+	defer instance.Stop()
+
 	wasmCtx, err := startABIContextV1(instance)
 	if err != nil {
 		t.Fatal(err)
@@ -139,14 +146,19 @@ func (im *headersHandlerV1) GetHttpRequestHeader() common.HeaderMap {
 }
 
 func TestStartABIContextV2_wazero(t *testing.T) {
-	testStartABIContextV2(t, wazero.NewInstanceFromBinary)
+	vm := wazero.NewVM()
+	defer vm.Close()
+
+	testStartABIContextV2(t, vm)
 }
 
-func testStartABIContextV2(t *testing.T, newInstance func([]byte) common.WasmInstance) {
-	if wasmCtx, err := startABIContextV2(newInstance(binAddRequestHeaderV2)); err != nil {
+func testStartABIContextV2(t *testing.T, vm common.WasmVM) {
+	module := vm.NewModule(binAddRequestHeaderV2)
+	instance := module.NewInstance()
+	defer instance.Stop()
+
+	if _, err := startABIContextV2(instance); err != nil {
 		t.Fatal(err)
-	} else {
-		wasmCtx.Instance.Stop()
 	}
 }
 
@@ -156,21 +168,19 @@ func startABIContextV2(instance common.WasmInstance) (wasmCtx *v2.ABIContext, er
 
 	// register ABI imports into the wasm vm instance
 	if err = instance.RegisterImports(wasmCtx.Name()); err != nil {
-		instance.Stop()
 		return
 	}
 
 	// start the wasm vm instance
-	if err = instance.Start(); err != nil {
-		instance.Stop()
-	}
+	err = instance.Start()
 	return
 }
 
 func TestAddRequestHeaderV2_wazero(t *testing.T) {
-	instance := wazero.NewInstanceFromBinary(binAddRequestHeaderV2)
-	defer instance.Stop()
-	testV2(t, instance, testAddRequestHeaderV2)
+	vm := wazero.NewVM()
+	defer vm.Close()
+
+	testV2(t, vm, testAddRequestHeaderV2)
 }
 
 func testAddRequestHeaderV2(wasmCtx *v2.ABIContext, contextID int32) error {
@@ -191,7 +201,11 @@ func testAddRequestHeaderV2(wasmCtx *v2.ABIContext, contextID int32) error {
 	return nil
 }
 
-func testV2(t *testing.T, instance common.WasmInstance, test func(wasmCtx *v2.ABIContext, contextID int32) error) {
+func testV2(t *testing.T, vm common.WasmVM, test func(wasmCtx *v2.ABIContext, contextID int32) error) {
+	module := vm.NewModule(binAddRequestHeaderV2)
+	instance := module.NewInstance()
+	defer instance.Stop()
+
 	wasmCtx, err := startABIContextV2(instance)
 	if err != nil {
 		t.Fatal(err)

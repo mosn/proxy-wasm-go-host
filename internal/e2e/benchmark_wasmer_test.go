@@ -27,17 +27,29 @@ import (
 )
 
 func BenchmarkStartABIContextV1_wasmer(b *testing.B) {
-	benchmarkStartABIContextV1(b, wasmer.NewInstanceFromBinary)
+	vm := wasmer.NewWasmerVM()
+	defer vm.Close()
+
+	benchmarkStartABIContextV1(b, vm)
 }
 
 func BenchmarkAddRequestHeaderV1_wasmer(b *testing.B) {
-	benchmarkAddRequestHeaderV1(b, wasmer.NewInstanceFromBinary)
+	vm := wasmer.NewWasmerVM()
+	defer vm.Close()
+
+	benchmarkAddRequestHeaderV1(b, vm)
 }
 
 func BenchmarkStartABIContextV2_wasmer(b *testing.B) {
-	benchmarkStartABIContextV2(b, wasmer.NewInstanceFromBinary)
+	vm := wasmer.NewWasmerVM()
+	defer vm.Close()
+
+	benchmarkStartABIContextV2(b, vm)
 }
 
 func BenchmarkAddRequestHeaderV2_wasmer(b *testing.B) {
-	benchmarkAddRequestHeaderV2(b, wasmer.NewInstanceFromBinary)
+	vm := wasmer.NewWasmerVM()
+	defer vm.Close()
+
+	benchmarkAddRequestHeaderV2(b, vm)
 }
