@@ -6,7 +6,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/stretchr/testify v1.8.0
 	github.com/tetratelabs/wabin v0.0.0-20220927005300-3b0fbf39a46a
-	github.com/tetratelabs/wazero v1.0.0-pre.3.0.20221122114515-b8d985462e20
+	github.com/tetratelabs/wazero v1.0.0-pre.4
 	github.com/wasmerio/wasmer-go v1.0.4
 	mosn.io/mosn v1.2.0
 	mosn.io/pkg v1.2.1
