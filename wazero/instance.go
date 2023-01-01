@@ -300,15 +300,13 @@ func (i *Instance) GetExportsMem(memName string) ([]byte, error) {
 		return nil, ErrInstanceNotStart
 	}
 
-	ctx := context.Background()
 	mem := i.instance.ExportedMemory(memName)
-	return i.GetMemory(0, uint64(mem.Size(ctx)))
+	return i.GetMemory(0, uint64(mem.Size()))
 }
 
 func (i *Instance) GetMemory(addr uint64, size uint64) ([]byte, error) {
-	ctx := context.Background()
 	mem := i.instance.Memory()
-	ret, ok := mem.Read(ctx, uint32(addr), uint32(size))
+	ret, ok := mem.Read(uint32(addr), uint32(size))
 	if !ok { // unexpected
 		return nil, fmt.Errorf("[wazero][instance] GetMemory unable to read %d bytes", size)
 	}
@@ -316,9 +314,8 @@ func (i *Instance) GetMemory(addr uint64, size uint64) ([]byte, error) {
 }
 
 func (i *Instance) PutMemory(addr uint64, size uint64, content []byte) error {
-	ctx := context.Background()
 	mem := i.instance.Memory()
-	ok := mem.Write(ctx, uint32(addr), content[0:size])
+	ok := mem.Write(uint32(addr), content[0:size])
 	if !ok {
 		return errors.New("out of memory")
 	}
@@ -326,9 +323,8 @@ func (i *Instance) PutMemory(addr uint64, size uint64, content []byte) error {
 }
 
 func (i *Instance) GetByte(addr uint64) (byte, error) {
-	ctx := context.Background()
 	mem := i.instance.Memory()
-	b, ok := mem.ReadByte(ctx, uint32(addr))
+	b, ok := mem.ReadByte(uint32(addr))
 	if !ok {
 		return b, errors.New("out of memory")
 	}
@@ -336,9 +332,8 @@ func (i *Instance) GetByte(addr uint64) (byte, error) {
 }
 
 func (i *Instance) PutByte(addr uint64, b byte) error {
-	ctx := context.Background()
 	mem := i.instance.Memory()
-	ok := mem.WriteByte(ctx, uint32(addr), b)
+	ok := mem.WriteByte(uint32(addr), b)
 	if !ok {
 		return errors.New("out of memory")
 	}
@@ -346,9 +341,8 @@ func (i *Instance) PutByte(addr uint64, b byte) error {
 }
 
 func (i *Instance) GetUint32(addr uint64) (uint32, error) {
-	ctx := context.Background()
 	mem := i.instance.Memory()
-	n, ok := mem.ReadUint32Le(ctx, uint32(addr))
+	n, ok := mem.ReadUint32Le(uint32(addr))
 	if !ok {
 		return n, errors.New("out of memory")
 	}
@@ -356,9 +350,8 @@ func (i *Instance) GetUint32(addr uint64) (uint32, error) {
 }
 
 func (i *Instance) PutUint32(addr uint64, value uint32) error {
-	ctx := context.Background()
 	mem := i.instance.Memory()
-	ok := mem.WriteUint32Le(ctx, uint32(addr), value)
+	ok := mem.WriteUint32Le(uint32(addr), value)
 	if !ok {
 		return errors.New("out of memory")
 	}
