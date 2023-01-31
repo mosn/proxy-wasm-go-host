@@ -26,7 +26,7 @@ import (
 )
 
 type VM struct {
-	runtime wazero.Runtime
+	cache wazero.CompilationCache
 }
 
 func NewVM() common.WasmVM {
@@ -43,7 +43,7 @@ func (w *VM) Name() string {
 var ctx = context.Background()
 
 func (w *VM) Init() {
-	w.runtime = wazero.NewRuntime(ctx)
+	w.cache = wazero.NewCompilationCache()
 }
 
 func (w *VM) NewModule(wasmBytes []byte) common.WasmModule {
@@ -51,18 +51,19 @@ func (w *VM) NewModule(wasmBytes []byte) common.WasmModule {
 		panic("wasm was empty")
 	}
 
-	m, err := w.runtime.CompileModule(ctx, wasmBytes)
+	runtime := wazero.NewRuntimeWithConfig(ctx, wazero.NewRuntimeConfig().WithCompilationCache(w.cache))
+	m, err := runtime.CompileModule(ctx, wasmBytes)
 	if err != nil {
 		panic(err)
 	}
 
-	return NewModule(w, m, wasmBytes)
+	return NewModule(w, runtime, m, wasmBytes)
 }
 
 // Close implements io.Closer
 func (w *VM) Close() (err error) {
-	if r := w.runtime; r != nil {
-		err = r.Close(ctx)
+	if c := w.cache; c != nil {
+		err = c.Close(ctx)
 	}
 	return
 }
