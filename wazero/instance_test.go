@@ -98,7 +98,7 @@ func TestInstanceData(t *testing.T) {
 
 	require.Nil(t, ins.Start())
 
-	var data int = 1
+	var data = 1
 	ins.SetData(data)
 	require.Equal(t, ins.GetData().(int), 1)
 

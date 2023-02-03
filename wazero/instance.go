@@ -48,6 +48,7 @@ type Instance struct {
 	vm     *VM
 	module *Module
 
+	runtime  wazero.Runtime
 	instance api.Module
 	abiList  []types.ABI
 
@@ -63,11 +64,12 @@ type Instance struct {
 type InstanceOptions func(instance *Instance)
 
 func NewInstance(vm *VM, module *Module, options ...InstanceOptions) *Instance {
-	// Here, we initialize an empty namespace as imports are defined prior to start.
+	// Here, we initialize an empty runtime as imports are defined prior to start.
 	ins := &Instance{
-		vm:     vm,
-		module: module,
-		lock:   sync.Mutex{},
+		vm:      vm,
+		module:  module,
+		runtime: wazero.NewRuntimeWithConfig(ctx, vm.config),
+		lock:    sync.Mutex{},
 	}
 
 	ins.stopCond = sync.NewCond(&ins.lock)
@@ -124,13 +126,13 @@ func (i *Instance) GetModule() common.WasmModule {
 	return i.module
 }
 
-// Start makes a new namespace which has the module dependencies of the guest.
+// Start makes a new runtime which has the module dependencies of the guest.
 func (i *Instance) Start() error {
 	ctx := context.Background()
-	r := i.module.runtime
+	r := i.runtime
 
 	if _, err := wasi_snapshot_preview1.NewBuilder(r).Instantiate(ctx); err != nil {
-		i.module.Close(ctx)
+		r.Close(ctx)
 		log.DefaultLogger.Warnf("[wazero][instance] Start fail to create wasi_snapshot_preview1 env, err: %v", err)
 		panic(err)
 	}
@@ -142,9 +144,9 @@ func (i *Instance) Start() error {
 		abi.OnInstanceCreate(i)
 	}
 
-	ins, err := r.InstantiateModule(ctx, i.module.module, wazero.NewModuleConfig())
+	ins, err := r.InstantiateModuleFromBinary(ctx, i.module.rawBytes)
 	if err != nil {
-		i.module.Close(ctx)
+		r.Close(ctx)
 		log.DefaultLogger.Errorf("[wazero][instance] Start failed to instantiate module, err: %v", err)
 		return err
 	}
@@ -176,8 +178,8 @@ func (i *Instance) Stop() {
 			}
 		}
 
-		if m := i.module; m != nil {
-			m.Close(ctx)
+		if r := i.runtime; r != nil {
+			r.Close(ctx)
 		}
 	}, nil)
 }
@@ -194,7 +196,7 @@ func (i *Instance) RegisterImports(abiName string) error {
 		return ErrInstanceAlreadyStart
 	}
 
-	r := i.module.runtime
+	r := i.runtime
 
 	// proxy-wasm cannot run multiple ABI in the same instance because the ABI
 	// collides. They all use the same module name: "env"
@@ -210,7 +212,7 @@ func (i *Instance) RegisterImports(abiName string) error {
 		wasiBuilder := r.NewHostModuleBuilder("wasi_unstable")
 		wasi_snapshot_preview1.NewFunctionExporter().ExportFunctions(wasiBuilder)
 		if _, err := wasiBuilder.Instantiate(ctx); err != nil {
-			i.module.Close(ctx)
+			r.Close(ctx)
 			log.DefaultLogger.Warnf("[wazero][instance] RegisterImports fail to create wasi_unstable env, err: %v", err)
 			panic(err)
 		}
