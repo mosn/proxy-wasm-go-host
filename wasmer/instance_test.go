@@ -28,6 +28,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	wasmerGo "github.com/wasmerio/wasmer-go/wasmer"
 	"mosn.io/mosn/pkg/mock"
 	"mosn.io/mosn/pkg/types"
@@ -183,6 +184,23 @@ func TestInstanceData(t *testing.T) {
 		assert.Equal(t, ins.GetData().(int), i)
 		ins.Unlock()
 	}
+}
+
+func TestInstanceTwice(t *testing.T) {
+	vm := NewWasmerVM()
+	defer vm.Close()
+
+	module := vm.NewModule([]byte(`
+			(module
+				(func (export "_start")))
+	`))
+	ins0 := module.NewInstance()
+	defer ins0.Stop()
+	ins1 := module.NewInstance()
+	defer ins1.Stop()
+
+	require.Nil(t, ins0.Start())
+	require.Nil(t, ins1.Start())
 }
 
 func TestWasmerTypes(t *testing.T) {
