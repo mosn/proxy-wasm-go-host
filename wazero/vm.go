@@ -20,13 +20,14 @@ package wazero
 import (
 	"context"
 
-	wazero "github.com/tetratelabs/wazero"
+	"github.com/tetratelabs/wazero"
 
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 
 type VM struct {
-	cache wazero.CompilationCache
+	cache  wazero.CompilationCache
+	config wazero.RuntimeConfig
 }
 
 func NewVM() common.WasmVM {
@@ -44,6 +45,7 @@ var ctx = context.Background()
 
 func (w *VM) Init() {
 	w.cache = wazero.NewCompilationCache()
+	w.config = wazero.NewRuntimeConfig().WithCompilationCache(w.cache)
 }
 
 func (w *VM) NewModule(wasmBytes []byte) common.WasmModule {
@@ -51,13 +53,7 @@ func (w *VM) NewModule(wasmBytes []byte) common.WasmModule {
 		panic("wasm was empty")
 	}
 
-	runtime := wazero.NewRuntimeWithConfig(ctx, wazero.NewRuntimeConfig().WithCompilationCache(w.cache))
-	m, err := runtime.CompileModule(ctx, wasmBytes)
-	if err != nil {
-		panic(err)
-	}
-
-	return NewModule(w, runtime, m, wasmBytes)
+	return NewModule(w, wasmBytes)
 }
 
 // Close implements io.Closer

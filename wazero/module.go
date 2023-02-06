@@ -18,40 +18,42 @@
 package wazero
 
 import (
-	"context"
 	"strings"
 
-	wazero "github.com/tetratelabs/wazero"
+	"github.com/tetratelabs/wazero"
 
 	"mosn.io/proxy-wasm-go-host/proxywasm/common"
 )
 
 type Module struct {
 	vm          *VM
-	runtime     wazero.Runtime
-	module      wazero.CompiledModule
-	abiNameList []string
 	rawBytes    []byte
+	abiNameList []string
 }
 
-func NewModule(vm *VM, runtime wazero.Runtime, module wazero.CompiledModule, wasmBytes []byte) *Module {
-	m := &Module{
-		vm:       vm,
-		runtime:  runtime,
-		module:   module,
-		rawBytes: wasmBytes,
-	}
+func NewModule(vm *VM, wasmBytes []byte) *Module {
+	m := &Module{vm: vm, rawBytes: wasmBytes}
 
 	m.Init()
 
 	return m
 }
 
+// Init reads the exported functions to support later calls to GetABINameList.
 func (w *Module) Init() {
-}
+	r := wazero.NewRuntimeWithConfig(ctx, w.vm.config)
+	defer r.Close(ctx)
 
-func (w *Module) Close(ctx context.Context) {
-	w.runtime.Close(ctx)
+	m, err := r.CompileModule(ctx, w.rawBytes)
+	if err != nil {
+		panic(err)
+	}
+
+	for export := range m.ExportedFunctions() {
+		if strings.HasPrefix(export, "proxy_abi") {
+			w.abiNameList = append(w.abiNameList, export)
+		}
+	}
 }
 
 func (w *Module) NewInstance() common.WasmInstance {
@@ -59,15 +61,5 @@ func (w *Module) NewInstance() common.WasmInstance {
 }
 
 func (w *Module) GetABINameList() []string {
-	abiNameList := make([]string, 0)
-
-	exportList := w.module.ExportedFunctions()
-
-	for export := range exportList {
-		if strings.HasPrefix(export, "proxy_abi") {
-			abiNameList = append(abiNameList, export)
-		}
-	}
-
-	return abiNameList
+	return w.abiNameList
 }

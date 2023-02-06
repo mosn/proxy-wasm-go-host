@@ -98,7 +98,7 @@ func TestInstanceData(t *testing.T) {
 
 	require.Nil(t, ins.Start())
 
-	var data int = 1
+	var data = 1
 	ins.SetData(data)
 	require.Equal(t, ins.GetData().(int), 1)
 
@@ -107,6 +107,20 @@ func TestInstanceData(t *testing.T) {
 		require.Equal(t, ins.GetData().(int), i)
 		ins.Unlock()
 	}
+}
+
+func TestInstanceTwice(t *testing.T) {
+	vm := NewVM()
+	defer vm.Close()
+
+	module := vm.NewModule(simpleWasm)
+	ins0 := module.NewInstance()
+	defer ins0.Stop()
+	ins1 := module.NewInstance()
+	defer ins1.Stop()
+
+	require.Nil(t, ins0.Start())
+	require.Nil(t, ins1.Start())
 }
 
 func TestRefCount(t *testing.T) {
