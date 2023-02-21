@@ -144,7 +144,7 @@ func (i *Instance) Start() error {
 		abi.OnInstanceCreate(i)
 	}
 
-	ins, err := r.InstantiateModuleFromBinary(ctx, i.module.rawBytes)
+	ins, err := r.Instantiate(ctx, i.module.rawBytes)
 	if err != nil {
 		r.Close(ctx)
 		log.DefaultLogger.Errorf("[wazero][instance] Start failed to instantiate module, err: %v", err)
