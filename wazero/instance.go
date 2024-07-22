@@ -51,6 +51,7 @@ type Instance struct {
 	runtime  wazero.Runtime
 	instance api.Module
 	abiList  []types.ABI
+	config   wazero.ModuleConfig
 
 	lock     sync.Mutex
 	started  uint32
@@ -63,12 +64,19 @@ type Instance struct {
 
 type InstanceOptions func(instance *Instance)
 
+func InstanceWithConfig(config wazero.ModuleConfig) InstanceOptions {
+	return func(instance *Instance) {
+		instance.config = config
+	}
+}
+
 func NewInstance(vm *VM, module *Module, options ...InstanceOptions) *Instance {
 	// Here, we initialize an empty runtime as imports are defined prior to start.
 	ins := &Instance{
 		vm:      vm,
 		module:  module,
 		runtime: wazero.NewRuntimeWithConfig(ctx, vm.config),
+		config:  wazero.NewModuleConfig(),
 		lock:    sync.Mutex{},
 	}
 
@@ -144,7 +152,7 @@ func (i *Instance) Start() error {
 		abi.OnInstanceCreate(i)
 	}
 
-	ins, err := r.Instantiate(ctx, i.module.rawBytes)
+	ins, err := r.InstantiateWithConfig(ctx, i.module.rawBytes, i.config)
 	if err != nil {
 		r.Close(ctx)
 		log.DefaultLogger.Errorf("[wazero][instance] Start failed to instantiate module, err: %v", err)
